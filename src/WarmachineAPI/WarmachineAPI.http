@@ -56,3 +56,26 @@ Content-Type: application/json
 }
 
 ###
+
+GET {{WarmachineAPI_HostAddress}}/api/maps/00000000-0000-0000-0000-000000000000/terrain
+Accept: application/json
+
+###
+
+POST {{WarmachineAPI_HostAddress}}/api/maps/00000000-0000-0000-0000-000000000000/terrain
+Content-Type: application/json
+
+{
+  "name": "Central Forest",
+  "terrainType": "Forest",
+  "shape": "Circle",
+  "x": 600,
+  "y": 600,
+  "radius": 150,
+  "blocksLineOfSight": false,
+  "grantsConcealment": true,
+  "grantsCover": false,
+  "movementEffect": "Difficult"
+}
+
+###
