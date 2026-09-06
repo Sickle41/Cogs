@@ -16,4 +16,5 @@ public class UnitDefinition : IEntity
     public int Armor { get; set; }
     public int DamageCapacity { get; set; }
     public bool IsCharacter { get; set; }
+    public int Allotment { get; set; }
 }
