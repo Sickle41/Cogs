@@ -1,18 +1,16 @@
 @WarmachineAPI_HostAddress = http://localhost:5069
 
-GET {{WarmachineAPI_HostAddress}}/api/players
+GET {{WarmachineAPI_HostAddress}}/api/factions
 Accept: application/json
 
 ###
 
-POST {{WarmachineAPI_HostAddress}}/api/players
+POST {{WarmachineAPI_HostAddress}}/api/factions
 Content-Type: application/json
 
 {
-  "name": "Ragnar",
-  "level": 1,
-  "health": 100,
-  "score": 0
+  "name": "Cygnar",
+  "description": "A steam-powered industrial nation."
 }
 
 ###
