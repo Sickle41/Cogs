@@ -105,3 +105,29 @@ Content-Type: application/json
 }
 
 ###
+
+GET {{WarmachineAPI_HostAddress}}/api/sessions
+Accept: application/json
+
+###
+
+POST {{WarmachineAPI_HostAddress}}/api/sessions
+Content-Type: application/json
+
+{
+  "mapId": "00000000-0000-0000-0000-000000000000",
+  "status": "Setup",
+  "currentRound": 1
+}
+
+###
+
+POST {{WarmachineAPI_HostAddress}}/api/sessions/00000000-0000-0000-0000-000000000000/participants
+Content-Type: application/json
+
+{
+  "armyId": "00000000-0000-0000-0000-000000000000",
+  "turnOrder": 1
+}
+
+###
