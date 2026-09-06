@@ -1,0 +1,18 @@
+@WarmachineAPI_HostAddress = http://localhost:5069
+
+GET {{WarmachineAPI_HostAddress}}/api/players
+Accept: application/json
+
+###
+
+POST {{WarmachineAPI_HostAddress}}/api/players
+Content-Type: application/json
+
+{
+  "name": "Ragnar",
+  "level": 1,
+  "health": 100,
+  "score": 0
+}
+
+###
