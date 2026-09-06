@@ -32,11 +32,27 @@ Content-Type: application/json
   "speed": 6,
   "meleeAttack": 6,
   "rangedAttack": 0,
+  "arcaneAttack": 0,
   "defense": 13,
   "armor": 15,
-  "commandRange": 0,
   "damageCapacity": 5,
   "isCharacter": false
+}
+
+###
+
+GET {{WarmachineAPI_HostAddress}}/api/maps
+Accept: application/json
+
+###
+
+POST {{WarmachineAPI_HostAddress}}/api/maps
+Content-Type: application/json
+
+{
+  "name": "Standard 4x4",
+  "width": 1219.2,
+  "height": 1219.2
 }
 
 ###
