@@ -1,0 +1,3 @@
+@WarmachineAPI_HostAddress = http://localhost:5057
+
+### Add requests here as endpoints are added on top of this branch.

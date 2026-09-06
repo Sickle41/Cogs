@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("WarmachineAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+eecff97b211c0b1a5aebd0d961d707a3109f262a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fe53ddb385ba0f677d265c14dbb6e8b78d06f61a")]
 [assembly: System.Reflection.AssemblyProductAttribute("WarmachineAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WarmachineAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
