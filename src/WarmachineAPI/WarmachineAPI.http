@@ -79,3 +79,29 @@ Content-Type: application/json
 }
 
 ###
+
+GET {{WarmachineAPI_HostAddress}}/api/armies
+Accept: application/json
+
+###
+
+POST {{WarmachineAPI_HostAddress}}/api/armies
+Content-Type: application/json
+
+{
+  "name": "Stryker's Command",
+  "factionId": "00000000-0000-0000-0000-000000000000",
+  "pointLimit": 50
+}
+
+###
+
+POST {{WarmachineAPI_HostAddress}}/api/armies/00000000-0000-0000-0000-000000000000/entries
+Content-Type: application/json
+
+{
+  "unitDefinitionId": "00000000-0000-0000-0000-000000000000",
+  "quantity": 6
+}
+
+###
