@@ -11,6 +11,7 @@ builder.Services.AddControllers()
 builder.Services.AddSingleton<IRepository<Faction>, InMemoryRepository<Faction>>();
 builder.Services.AddSingleton<IRepository<UnitDefinition>, InMemoryRepository<UnitDefinition>>();
 builder.Services.AddSingleton<IRepository<Map>, InMemoryRepository<Map>>();
+builder.Services.AddSingleton<IRepository<TerrainFeature>, InMemoryRepository<TerrainFeature>>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
