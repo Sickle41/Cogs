@@ -11,12 +11,18 @@ public class GameSessionsController : ControllerBase
     private readonly IRepository<GameSession> _sessions;
     private readonly IRepository<Map> _maps;
     private readonly IRepository<Scenario> _scenarios;
+    private readonly IRepository<ModelInstance> _models;
 
-    public GameSessionsController(IRepository<GameSession> sessions, IRepository<Map> maps, IRepository<Scenario> scenarios)
+    public GameSessionsController(
+        IRepository<GameSession> sessions,
+        IRepository<Map> maps,
+        IRepository<Scenario> scenarios,
+        IRepository<ModelInstance> models)
     {
         _sessions = sessions;
         _maps = maps;
         _scenarios = scenarios;
+        _models = models;
     }
 
     [HttpGet]
@@ -69,5 +75,22 @@ public class GameSessionsController : ControllerBase
     public IActionResult Delete(Guid id)
     {
         return _sessions.Delete(id) ? NoContent() : NotFound();
+    }
+
+    [HttpPost("{id:guid}/reset-activations")]
+    public IActionResult ResetActivations(Guid id)
+    {
+        if (_sessions.GetById(id) is null)
+        {
+            return NotFound($"Session '{id}' does not exist.");
+        }
+
+        foreach (var model in _models.GetAll().Where(m => m.GameSessionId == id))
+        {
+            model.HasActivated = false;
+            _models.Update(model.Id, model);
+        }
+
+        return NoContent();
     }
 }

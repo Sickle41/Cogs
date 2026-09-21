@@ -18,6 +18,11 @@ public class DamageUpdate
     public List<StatusEffect> StatusEffects { get; set; } = new();
 }
 
+public class ActivationUpdate
+{
+    public bool HasActivated { get; set; }
+}
+
 [ApiController]
 public class ModelInstancesController : ControllerBase
 {
@@ -113,6 +118,20 @@ public class ModelInstancesController : ControllerBase
         }
 
         model.DamageGrid = update;
+        _models.Update(id, model);
+        return NoContent();
+    }
+
+    [HttpPatch("api/models/{id:guid}/activation")]
+    public IActionResult UpdateActivation(Guid id, ActivationUpdate update)
+    {
+        var model = _models.GetById(id);
+        if (model is null)
+        {
+            return NotFound();
+        }
+
+        model.HasActivated = update.HasActivated;
         _models.Update(id, model);
         return NoContent();
     }
