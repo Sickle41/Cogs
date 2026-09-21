@@ -82,6 +82,24 @@ Content-Type: application/json
 
 ###
 
+GET {{WarmachineAPI_HostAddress}}/api/maps/00000000-0000-0000-0000-000000000000/deployment-zones
+Accept: application/json
+
+###
+
+POST {{WarmachineAPI_HostAddress}}/api/maps/00000000-0000-0000-0000-000000000000/deployment-zones
+Content-Type: application/json
+
+{
+  "name": "Player 1",
+  "x": 0,
+  "y": 0,
+  "width": 1219.2,
+  "height": 254
+}
+
+###
+
 GET {{WarmachineAPI_HostAddress}}/api/maps/00000000-0000-0000-0000-000000000000/terrain
 Accept: application/json
 
