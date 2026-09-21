@@ -123,6 +123,31 @@ public class ModelInstancesControllerTests : IClassFixture<WarmachineApiFactory>
     }
 
     [Fact]
+    public async Task Create_ThenUpdateDamageGrid_ReflectsColumnState()
+    {
+        var map = await CreateMapAsync("Model Damage Grid Board");
+        var session = await CreateSessionAsync(map.Id);
+        var entry = await CreateFullChainArmyEntryAsync("DamageGrid");
+
+        var createResponse = await _client.PostAsJsonAsync($"/api/sessions/{session.Id}/models", new ModelInstance { ArmyEntryId = entry.Id }, TestJson.Options);
+        var created = await createResponse.Content.ReadFromJsonAsync<ModelInstance>(TestJson.Options);
+
+        var gridUpdate = new List<DamageColumnState>
+        {
+            new() { Name = "Left Arm", BoxesFilled = 2 },
+            new() { Name = "Cortex", BoxesFilled = 1 }
+        };
+        var patchResponse = await _client.PatchAsJsonAsync($"/api/models/{created!.Id}/damage-grid", gridUpdate, TestJson.Options);
+        Assert.Equal(HttpStatusCode.NoContent, patchResponse.StatusCode);
+
+        var getResponse = await _client.GetAsync($"/api/models/{created.Id}");
+        var fetched = await getResponse.Content.ReadFromJsonAsync<ModelInstance>(TestJson.Options);
+        Assert.Equal(2, fetched!.DamageGrid.Count);
+        Assert.Contains(fetched.DamageGrid, c => c.Name == "Left Arm" && c.BoxesFilled == 2);
+        Assert.Contains(fetched.DamageGrid, c => c.Name == "Cortex" && c.BoxesFilled == 1);
+    }
+
+    [Fact]
     public async Task Delete_ThenGetById_ReturnsNotFound()
     {
         var map = await CreateMapAsync("Model Delete Board");
