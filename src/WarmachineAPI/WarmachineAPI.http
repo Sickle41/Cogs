@@ -131,3 +131,37 @@ Content-Type: application/json
 }
 
 ###
+
+POST {{WarmachineAPI_HostAddress}}/api/sessions/00000000-0000-0000-0000-000000000000/models
+Content-Type: application/json
+
+{
+  "armyEntryId": "00000000-0000-0000-0000-000000000000",
+  "x": 100,
+  "y": 100,
+  "facing": 0
+}
+
+###
+
+PATCH {{WarmachineAPI_HostAddress}}/api/models/00000000-0000-0000-0000-000000000000/position
+Content-Type: application/json
+
+{
+  "x": 150,
+  "y": 120,
+  "facing": 90
+}
+
+###
+
+PATCH {{WarmachineAPI_HostAddress}}/api/models/00000000-0000-0000-0000-000000000000/damage
+Content-Type: application/json
+
+{
+  "damageTaken": 3,
+  "isDestroyed": false,
+  "statusEffects": ["KnockedDown"]
+}
+
+###
