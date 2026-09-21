@@ -12,4 +12,5 @@ public class ModelInstance : IEntity
     public bool IsDestroyed { get; set; }
     public List<StatusEffect> StatusEffects { get; set; } = new();
     public List<DamageColumnState> DamageGrid { get; set; } = new();
+    public bool HasActivated { get; set; }
 }

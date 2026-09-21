@@ -253,3 +253,16 @@ Content-Type: application/json
 ]
 
 ###
+
+PATCH {{WarmachineAPI_HostAddress}}/api/models/00000000-0000-0000-0000-000000000000/activation
+Content-Type: application/json
+
+{
+  "hasActivated": true
+}
+
+###
+
+POST {{WarmachineAPI_HostAddress}}/api/sessions/00000000-0000-0000-0000-000000000000/reset-activations
+
+###

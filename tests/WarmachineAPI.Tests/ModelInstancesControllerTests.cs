@@ -148,6 +148,50 @@ public class ModelInstancesControllerTests : IClassFixture<WarmachineApiFactory>
     }
 
     [Fact]
+    public async Task Create_ThenUpdateActivation_ReflectsHasActivated()
+    {
+        var map = await CreateMapAsync("Model Activation Board");
+        var session = await CreateSessionAsync(map.Id);
+        var entry = await CreateFullChainArmyEntryAsync("Activation");
+
+        var createResponse = await _client.PostAsJsonAsync($"/api/sessions/{session.Id}/models", new ModelInstance { ArmyEntryId = entry.Id }, TestJson.Options);
+        var created = await createResponse.Content.ReadFromJsonAsync<ModelInstance>(TestJson.Options);
+        Assert.False(created!.HasActivated);
+
+        var patchResponse = await _client.PatchAsJsonAsync($"/api/models/{created.Id}/activation", new ActivationUpdate { HasActivated = true }, TestJson.Options);
+        Assert.Equal(HttpStatusCode.NoContent, patchResponse.StatusCode);
+
+        var getResponse = await _client.GetAsync($"/api/models/{created.Id}");
+        var fetched = await getResponse.Content.ReadFromJsonAsync<ModelInstance>(TestJson.Options);
+        Assert.True(fetched!.HasActivated);
+    }
+
+    [Fact]
+    public async Task ResetActivations_SetsAllModelsInSessionToNotActivated()
+    {
+        var map = await CreateMapAsync("Model Reset Activation Board");
+        var session = await CreateSessionAsync(map.Id);
+        var entryA = await CreateFullChainArmyEntryAsync("ResetA");
+        var entryB = await CreateFullChainArmyEntryAsync("ResetB");
+
+        var createAResponse = await _client.PostAsJsonAsync($"/api/sessions/{session.Id}/models", new ModelInstance { ArmyEntryId = entryA.Id }, TestJson.Options);
+        var createdA = await createAResponse.Content.ReadFromJsonAsync<ModelInstance>(TestJson.Options);
+        var createBResponse = await _client.PostAsJsonAsync($"/api/sessions/{session.Id}/models", new ModelInstance { ArmyEntryId = entryB.Id }, TestJson.Options);
+        var createdB = await createBResponse.Content.ReadFromJsonAsync<ModelInstance>(TestJson.Options);
+
+        await _client.PatchAsJsonAsync($"/api/models/{createdA!.Id}/activation", new ActivationUpdate { HasActivated = true }, TestJson.Options);
+        await _client.PatchAsJsonAsync($"/api/models/{createdB!.Id}/activation", new ActivationUpdate { HasActivated = true }, TestJson.Options);
+
+        var resetResponse = await _client.PostAsync($"/api/sessions/{session.Id}/reset-activations", null);
+        Assert.Equal(HttpStatusCode.NoContent, resetResponse.StatusCode);
+
+        var fetchedA = await (await _client.GetAsync($"/api/models/{createdA.Id}")).Content.ReadFromJsonAsync<ModelInstance>(TestJson.Options);
+        var fetchedB = await (await _client.GetAsync($"/api/models/{createdB.Id}")).Content.ReadFromJsonAsync<ModelInstance>(TestJson.Options);
+        Assert.False(fetchedA!.HasActivated);
+        Assert.False(fetchedB!.HasActivated);
+    }
+
+    [Fact]
     public async Task Delete_ThenGetById_ReturnsNotFound()
     {
         var map = await CreateMapAsync("Model Delete Board");
