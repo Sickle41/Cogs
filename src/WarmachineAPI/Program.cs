@@ -1,4 +1,6 @@
 using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
+using WarmachineAPI.Data;
 using WarmachineAPI.Models;
 using WarmachineAPI.Services;
 
@@ -8,27 +10,38 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers()
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
-builder.Services.AddSingleton<IRepository<Faction>, InMemoryRepository<Faction>>();
-builder.Services.AddSingleton<IRepository<UnitDefinition>, InMemoryRepository<UnitDefinition>>();
-builder.Services.AddSingleton<IRepository<Map>, InMemoryRepository<Map>>();
-builder.Services.AddSingleton<IRepository<TerrainFeature>, InMemoryRepository<TerrainFeature>>();
-builder.Services.AddSingleton<IRepository<Army>, InMemoryRepository<Army>>();
-builder.Services.AddSingleton<IRepository<ArmyEntry>, InMemoryRepository<ArmyEntry>>();
-builder.Services.AddSingleton<IRepository<GameSession>, InMemoryRepository<GameSession>>();
-builder.Services.AddSingleton<IRepository<GameParticipant>, InMemoryRepository<GameParticipant>>();
-builder.Services.AddSingleton<IRepository<ModelInstance>, InMemoryRepository<ModelInstance>>();
-builder.Services.AddSingleton<IRepository<Spell>, InMemoryRepository<Spell>>();
-builder.Services.AddSingleton<IRepository<Ability>, InMemoryRepository<Ability>>();
-builder.Services.AddSingleton<IRepository<DeploymentZone>, InMemoryRepository<DeploymentZone>>();
-builder.Services.AddSingleton<IRepository<Scenario>, InMemoryRepository<Scenario>>();
-builder.Services.AddSingleton<IRepository<ControlZone>, InMemoryRepository<ControlZone>>();
-builder.Services.AddSingleton<IRepository<CombatLogEntry>, InMemoryRepository<CombatLogEntry>>();
-builder.Services.AddSingleton<IRepository<Account>, InMemoryRepository<Account>>();
+
+builder.Services.AddDbContext<WarmachineDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("Default")));
+
+builder.Services.AddScoped<IRepository<Faction>, EfRepository<Faction>>();
+builder.Services.AddScoped<IRepository<UnitDefinition>, EfRepository<UnitDefinition>>();
+builder.Services.AddScoped<IRepository<Map>, EfRepository<Map>>();
+builder.Services.AddScoped<IRepository<TerrainFeature>, EfRepository<TerrainFeature>>();
+builder.Services.AddScoped<IRepository<Army>, EfRepository<Army>>();
+builder.Services.AddScoped<IRepository<ArmyEntry>, EfRepository<ArmyEntry>>();
+builder.Services.AddScoped<IRepository<GameSession>, EfRepository<GameSession>>();
+builder.Services.AddScoped<IRepository<GameParticipant>, EfRepository<GameParticipant>>();
+builder.Services.AddScoped<IRepository<ModelInstance>, EfRepository<ModelInstance>>();
+builder.Services.AddScoped<IRepository<Spell>, EfRepository<Spell>>();
+builder.Services.AddScoped<IRepository<Ability>, EfRepository<Ability>>();
+builder.Services.AddScoped<IRepository<DeploymentZone>, EfRepository<DeploymentZone>>();
+builder.Services.AddScoped<IRepository<Scenario>, EfRepository<Scenario>>();
+builder.Services.AddScoped<IRepository<ControlZone>, EfRepository<ControlZone>>();
+builder.Services.AddScoped<IRepository<CombatLogEntry>, EfRepository<CombatLogEntry>>();
+builder.Services.AddScoped<IRepository<Account>, EfRepository<Account>>();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<WarmachineDbContext>();
+    db.Database.Migrate();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
