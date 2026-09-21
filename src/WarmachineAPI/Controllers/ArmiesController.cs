@@ -4,17 +4,33 @@ using WarmachineAPI.Services;
 
 namespace WarmachineAPI.Controllers;
 
+public class ArmyPointsSummary
+{
+    public int TotalPoints { get; set; }
+    public int PointLimit { get; set; }
+    public int RemainingPoints { get; set; }
+    public bool IsOverLimit { get; set; }
+}
+
 [ApiController]
 [Route("api/[controller]")]
 public class ArmiesController : ControllerBase
 {
     private readonly IRepository<Army> _armies;
     private readonly IRepository<Faction> _factions;
+    private readonly IRepository<ArmyEntry> _armyEntries;
+    private readonly IRepository<UnitDefinition> _units;
 
-    public ArmiesController(IRepository<Army> armies, IRepository<Faction> factions)
+    public ArmiesController(
+        IRepository<Army> armies,
+        IRepository<Faction> factions,
+        IRepository<ArmyEntry> armyEntries,
+        IRepository<UnitDefinition> units)
     {
         _armies = armies;
         _factions = factions;
+        _armyEntries = armyEntries;
+        _units = units;
     }
 
     [HttpGet]
@@ -28,6 +44,28 @@ public class ArmiesController : ControllerBase
     {
         var army = _armies.GetById(id);
         return army is null ? NotFound() : Ok(army);
+    }
+
+    [HttpGet("{id:guid}/points-summary")]
+    public ActionResult<ArmyPointsSummary> GetPointsSummary(Guid id)
+    {
+        var army = _armies.GetById(id);
+        if (army is null)
+        {
+            return NotFound();
+        }
+
+        var totalPoints = _armyEntries.GetAll()
+            .Where(e => e.ArmyId == id)
+            .Sum(e => (_units.GetById(e.UnitDefinitionId)?.PointCost ?? 0) * e.Quantity);
+
+        return Ok(new ArmyPointsSummary
+        {
+            TotalPoints = totalPoints,
+            PointLimit = army.PointLimit,
+            RemainingPoints = army.PointLimit - totalPoints,
+            IsOverLimit = totalPoints > army.PointLimit
+        });
     }
 
     [HttpPost]
