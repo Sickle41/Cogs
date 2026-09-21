@@ -1,0 +1,141 @@
+using System.Net;
+using System.Net.Http.Json;
+using WarmachineAPI.Controllers;
+using WarmachineAPI.Models;
+
+namespace WarmachineAPI.Tests;
+
+public class ModelInstancesControllerTests : IClassFixture<WarmachineApiFactory>
+{
+    private readonly HttpClient _client;
+
+    public ModelInstancesControllerTests(WarmachineApiFactory factory)
+    {
+        _client = factory.CreateClient();
+    }
+
+    private async Task<Faction> CreateFactionAsync(string name)
+    {
+        var response = await _client.PostAsJsonAsync("/api/factions", new Faction { Name = name }, TestJson.Options);
+        return (await response.Content.ReadFromJsonAsync<Faction>(TestJson.Options))!;
+    }
+
+    private async Task<UnitDefinition> CreateUnitAsync(Guid factionId, string name)
+    {
+        var unit = new UnitDefinition { FactionId = factionId, Name = name, Category = UnitCategory.Unit, PointCost = 3 };
+        var response = await _client.PostAsJsonAsync("/api/units", unit, TestJson.Options);
+        return (await response.Content.ReadFromJsonAsync<UnitDefinition>(TestJson.Options))!;
+    }
+
+    private async Task<Army> CreateArmyAsync(Guid factionId, string name)
+    {
+        var response = await _client.PostAsJsonAsync("/api/armies", new Army { Name = name, FactionId = factionId, PointLimit = 50 }, TestJson.Options);
+        return (await response.Content.ReadFromJsonAsync<Army>(TestJson.Options))!;
+    }
+
+    private async Task<ArmyEntry> CreateArmyEntryAsync(Guid armyId, Guid unitId)
+    {
+        var response = await _client.PostAsJsonAsync($"/api/armies/{armyId}/entries", new ArmyEntry { UnitDefinitionId = unitId, Quantity = 6 }, TestJson.Options);
+        return (await response.Content.ReadFromJsonAsync<ArmyEntry>(TestJson.Options))!;
+    }
+
+    private async Task<Map> CreateMapAsync(string name)
+    {
+        var response = await _client.PostAsJsonAsync("/api/maps", new Map { Name = name }, TestJson.Options);
+        return (await response.Content.ReadFromJsonAsync<Map>(TestJson.Options))!;
+    }
+
+    private async Task<GameSession> CreateSessionAsync(Guid mapId)
+    {
+        var response = await _client.PostAsJsonAsync("/api/sessions", new GameSession { MapId = mapId }, TestJson.Options);
+        return (await response.Content.ReadFromJsonAsync<GameSession>(TestJson.Options))!;
+    }
+
+    private async Task<ArmyEntry> CreateFullChainArmyEntryAsync(string suffix)
+    {
+        var faction = await CreateFactionAsync($"Cygnar-Model-{suffix}");
+        var unit = await CreateUnitAsync(faction.Id, "Stormblade");
+        var army = await CreateArmyAsync(faction.Id, "Stryker's Command");
+        return await CreateArmyEntryAsync(army.Id, unit.Id);
+    }
+
+    [Fact]
+    public async Task Create_WithInvalidSession_ReturnsBadRequest()
+    {
+        var entry = await CreateFullChainArmyEntryAsync("BadSession");
+        var model = new ModelInstance { ArmyEntryId = entry.Id, X = 0, Y = 0 };
+
+        var response = await _client.PostAsJsonAsync($"/api/sessions/{Guid.NewGuid()}/models", model, TestJson.Options);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Create_WithInvalidArmyEntry_ReturnsBadRequest()
+    {
+        var map = await CreateMapAsync("Model Bad Entry Board");
+        var session = await CreateSessionAsync(map.Id);
+
+        var model = new ModelInstance { ArmyEntryId = Guid.NewGuid(), X = 0, Y = 0 };
+        var response = await _client.PostAsJsonAsync($"/api/sessions/{session.Id}/models", model, TestJson.Options);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Create_ThenUpdatePosition_ReflectsNewCoordinates()
+    {
+        var map = await CreateMapAsync("Model Position Board");
+        var session = await CreateSessionAsync(map.Id);
+        var entry = await CreateFullChainArmyEntryAsync("Position");
+
+        var createResponse = await _client.PostAsJsonAsync($"/api/sessions/{session.Id}/models", new ModelInstance { ArmyEntryId = entry.Id, X = 100, Y = 100, Facing = 0 }, TestJson.Options);
+        var created = await createResponse.Content.ReadFromJsonAsync<ModelInstance>(TestJson.Options);
+
+        var positionUpdate = new PositionUpdate { X = 150, Y = 120, Facing = 90 };
+        var patchResponse = await _client.PatchAsJsonAsync($"/api/models/{created!.Id}/position", positionUpdate, TestJson.Options);
+        Assert.Equal(HttpStatusCode.NoContent, patchResponse.StatusCode);
+
+        var getResponse = await _client.GetAsync($"/api/models/{created.Id}");
+        var fetched = await getResponse.Content.ReadFromJsonAsync<ModelInstance>(TestJson.Options);
+        Assert.Equal(150, fetched!.X);
+        Assert.Equal(120, fetched.Y);
+        Assert.Equal(90, fetched.Facing);
+    }
+
+    [Fact]
+    public async Task Create_ThenUpdateDamage_ReflectsDamageAndStatusEffects()
+    {
+        var map = await CreateMapAsync("Model Damage Board");
+        var session = await CreateSessionAsync(map.Id);
+        var entry = await CreateFullChainArmyEntryAsync("Damage");
+
+        var createResponse = await _client.PostAsJsonAsync($"/api/sessions/{session.Id}/models", new ModelInstance { ArmyEntryId = entry.Id }, TestJson.Options);
+        var created = await createResponse.Content.ReadFromJsonAsync<ModelInstance>(TestJson.Options);
+
+        var damageUpdate = new DamageUpdate { DamageTaken = 3, IsDestroyed = false, StatusEffects = new List<StatusEffect> { StatusEffect.KnockedDown } };
+        var patchResponse = await _client.PatchAsJsonAsync($"/api/models/{created!.Id}/damage", damageUpdate, TestJson.Options);
+        Assert.Equal(HttpStatusCode.NoContent, patchResponse.StatusCode);
+
+        var getResponse = await _client.GetAsync($"/api/models/{created.Id}");
+        var fetched = await getResponse.Content.ReadFromJsonAsync<ModelInstance>(TestJson.Options);
+        Assert.Equal(3, fetched!.DamageTaken);
+        Assert.Contains(StatusEffect.KnockedDown, fetched.StatusEffects);
+    }
+
+    [Fact]
+    public async Task Delete_ThenGetById_ReturnsNotFound()
+    {
+        var map = await CreateMapAsync("Model Delete Board");
+        var session = await CreateSessionAsync(map.Id);
+        var entry = await CreateFullChainArmyEntryAsync("Delete");
+
+        var createResponse = await _client.PostAsJsonAsync($"/api/sessions/{session.Id}/models", new ModelInstance { ArmyEntryId = entry.Id }, TestJson.Options);
+        var created = await createResponse.Content.ReadFromJsonAsync<ModelInstance>(TestJson.Options);
+
+        var deleteResponse = await _client.DeleteAsync($"/api/models/{created!.Id}");
+        Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
+
+        var getResponse = await _client.GetAsync($"/api/models/{created.Id}");
+        Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
+    }
+}
