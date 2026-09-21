@@ -17,4 +17,5 @@ public class UnitDefinition : IEntity
     public int DamageCapacity { get; set; }
     public bool IsCharacter { get; set; }
     public int Allotment { get; set; }
+    public List<DamageColumnTemplate> DamageColumns { get; set; } = new();
 }

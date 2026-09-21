@@ -103,6 +103,20 @@ public class ModelInstancesController : ControllerBase
         return NoContent();
     }
 
+    [HttpPatch("api/models/{id:guid}/damage-grid")]
+    public IActionResult UpdateDamageGrid(Guid id, List<DamageColumnState> update)
+    {
+        var model = _models.GetById(id);
+        if (model is null)
+        {
+            return NotFound();
+        }
+
+        model.DamageGrid = update;
+        _models.Update(id, model);
+        return NoContent();
+    }
+
     [HttpDelete("api/models/{id:guid}")]
     public IActionResult Delete(Guid id)
     {

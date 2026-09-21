@@ -170,3 +170,14 @@ Content-Type: application/json
 }
 
 ###
+
+PATCH {{WarmachineAPI_HostAddress}}/api/models/00000000-0000-0000-0000-000000000000/damage-grid
+Content-Type: application/json
+
+[
+  { "name": "Left Arm", "boxesFilled": 2 },
+  { "name": "Right Arm", "boxesFilled": 0 },
+  { "name": "Cortex", "boxesFilled": 1 }
+]
+
+###

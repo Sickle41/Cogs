@@ -89,4 +89,25 @@ public class UnitDefinitionsControllerTests : IClassFixture<WarmachineApiFactory
         var getResponse = await _client.GetAsync($"/api/units/{created.Id}");
         Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
     }
+
+    [Fact]
+    public async Task Create_WithDamageColumns_RoundTripsTemplate()
+    {
+        var faction = await CreateFactionAsync("Cygnar-Jack");
+        var jack = BuildUnit(faction.Id, "Ironclad");
+        jack.Category = UnitCategory.Warjack;
+        jack.DamageColumns = new List<DamageColumnTemplate>
+        {
+            new() { Name = "Left Arm", TotalBoxes = 6 },
+            new() { Name = "Right Arm", TotalBoxes = 6 },
+            new() { Name = "Cortex", TotalBoxes = 5 }
+        };
+
+        var response = await _client.PostAsJsonAsync("/api/units", jack, TestJson.Options);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        var created = await response.Content.ReadFromJsonAsync<UnitDefinition>(TestJson.Options);
+        Assert.Equal(3, created!.DamageColumns.Count);
+        Assert.Contains(created.DamageColumns, c => c.Name == "Cortex" && c.TotalBoxes == 5);
+    }
 }
