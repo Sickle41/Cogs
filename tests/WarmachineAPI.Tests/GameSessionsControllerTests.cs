@@ -19,6 +19,12 @@ public class GameSessionsControllerTests : IClassFixture<WarmachineApiFactory>
         return (await response.Content.ReadFromJsonAsync<Map>(TestJson.Options))!;
     }
 
+    private async Task<Scenario> CreateScenarioAsync(string name)
+    {
+        var response = await _client.PostAsJsonAsync("/api/scenarios", new Scenario { Name = name }, TestJson.Options);
+        return (await response.Content.ReadFromJsonAsync<Scenario>(TestJson.Options))!;
+    }
+
     [Fact]
     public async Task Create_WithInvalidMap_ReturnsBadRequest()
     {
@@ -59,5 +65,42 @@ public class GameSessionsControllerTests : IClassFixture<WarmachineApiFactory>
         var fetched = await getResponse.Content.ReadFromJsonAsync<GameSession>(TestJson.Options);
         Assert.Equal(SessionStatus.InProgress, fetched!.Status);
         Assert.Equal(participantId, fetched.ActiveParticipantId);
+    }
+
+    [Fact]
+    public async Task Create_WithInvalidScenario_ReturnsBadRequest()
+    {
+        var map = await CreateMapAsync("Session Bad Scenario Board");
+        var session = new GameSession { MapId = map.Id, ScenarioId = Guid.NewGuid() };
+
+        var response = await _client.PostAsJsonAsync("/api/sessions", session, TestJson.Options);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Create_WithValidScenario_ReturnsCreated()
+    {
+        var map = await CreateMapAsync("Session Valid Scenario Board");
+        var scenario = await CreateScenarioAsync("Session Scenario");
+        var session = new GameSession { MapId = map.Id, ScenarioId = scenario.Id };
+
+        var response = await _client.PostAsJsonAsync("/api/sessions", session, TestJson.Options);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        var created = await response.Content.ReadFromJsonAsync<GameSession>(TestJson.Options);
+        Assert.Equal(scenario.Id, created!.ScenarioId);
+    }
+
+    [Fact]
+    public async Task Create_WithoutScenario_ReturnsCreated()
+    {
+        var map = await CreateMapAsync("Session No Scenario Board");
+        var session = new GameSession { MapId = map.Id };
+
+        var response = await _client.PostAsJsonAsync("/api/sessions", session, TestJson.Options);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        var created = await response.Content.ReadFromJsonAsync<GameSession>(TestJson.Options);
+        Assert.Null(created!.ScenarioId);
     }
 }

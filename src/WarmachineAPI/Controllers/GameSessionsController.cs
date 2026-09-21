@@ -10,11 +10,13 @@ public class GameSessionsController : ControllerBase
 {
     private readonly IRepository<GameSession> _sessions;
     private readonly IRepository<Map> _maps;
+    private readonly IRepository<Scenario> _scenarios;
 
-    public GameSessionsController(IRepository<GameSession> sessions, IRepository<Map> maps)
+    public GameSessionsController(IRepository<GameSession> sessions, IRepository<Map> maps, IRepository<Scenario> scenarios)
     {
         _sessions = sessions;
         _maps = maps;
+        _scenarios = scenarios;
     }
 
     [HttpGet]
@@ -38,6 +40,11 @@ public class GameSessionsController : ControllerBase
             return BadRequest($"Map '{session.MapId}' does not exist.");
         }
 
+        if (session.ScenarioId.HasValue && _scenarios.GetById(session.ScenarioId.Value) is null)
+        {
+            return BadRequest($"Scenario '{session.ScenarioId}' does not exist.");
+        }
+
         var created = _sessions.Create(session);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
@@ -48,6 +55,11 @@ public class GameSessionsController : ControllerBase
         if (_maps.GetById(session.MapId) is null)
         {
             return BadRequest($"Map '{session.MapId}' does not exist.");
+        }
+
+        if (session.ScenarioId.HasValue && _scenarios.GetById(session.ScenarioId.Value) is null)
+        {
+            return BadRequest($"Scenario '{session.ScenarioId}' does not exist.");
         }
 
         return _sessions.Update(id, session) ? NoContent() : NotFound();
