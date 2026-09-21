@@ -20,17 +20,20 @@ public class ArmiesController : ControllerBase
     private readonly IRepository<Faction> _factions;
     private readonly IRepository<ArmyEntry> _armyEntries;
     private readonly IRepository<UnitDefinition> _units;
+    private readonly IRepository<Account> _accounts;
 
     public ArmiesController(
         IRepository<Army> armies,
         IRepository<Faction> factions,
         IRepository<ArmyEntry> armyEntries,
-        IRepository<UnitDefinition> units)
+        IRepository<UnitDefinition> units,
+        IRepository<Account> accounts)
     {
         _armies = armies;
         _factions = factions;
         _armyEntries = armyEntries;
         _units = units;
+        _accounts = accounts;
     }
 
     [HttpGet]
@@ -76,6 +79,11 @@ public class ArmiesController : ControllerBase
             return BadRequest($"Faction '{army.FactionId}' does not exist.");
         }
 
+        if (army.OwnerAccountId.HasValue && _accounts.GetById(army.OwnerAccountId.Value) is null)
+        {
+            return BadRequest($"Account '{army.OwnerAccountId}' does not exist.");
+        }
+
         var created = _armies.Create(army);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
@@ -86,6 +94,11 @@ public class ArmiesController : ControllerBase
         if (_factions.GetById(army.FactionId) is null)
         {
             return BadRequest($"Faction '{army.FactionId}' does not exist.");
+        }
+
+        if (army.OwnerAccountId.HasValue && _accounts.GetById(army.OwnerAccountId.Value) is null)
+        {
+            return BadRequest($"Account '{army.OwnerAccountId}' does not exist.");
         }
 
         return _armies.Update(id, army) ? NoContent() : NotFound();

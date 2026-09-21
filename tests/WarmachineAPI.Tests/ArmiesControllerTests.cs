@@ -127,4 +127,42 @@ public class ArmiesControllerTests : IClassFixture<WarmachineApiFactory>
         var response = await _client.GetAsync($"/api/armies/{Guid.NewGuid()}/points-summary");
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Create_WithInvalidOwnerAccount_ReturnsBadRequest()
+    {
+        var faction = await CreateFactionAsync("Cygnar-Bad-Owner");
+        var army = new Army { Name = "Orphan Owner Army", FactionId = faction.Id, PointLimit = 50, OwnerAccountId = Guid.NewGuid() };
+
+        var response = await _client.PostAsJsonAsync("/api/armies", army, TestJson.Options);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Create_WithValidOwnerAccount_ReturnsCreated()
+    {
+        var faction = await CreateFactionAsync("Cygnar-Valid-Owner");
+        var accountResponse = await _client.PostAsJsonAsync("/api/accounts", new Account { DisplayName = "Sickle41" }, TestJson.Options);
+        var account = await accountResponse.Content.ReadFromJsonAsync<Account>(TestJson.Options);
+
+        var army = new Army { Name = "Owned Army", FactionId = faction.Id, PointLimit = 50, OwnerAccountId = account!.Id };
+        var response = await _client.PostAsJsonAsync("/api/armies", army, TestJson.Options);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var created = await response.Content.ReadFromJsonAsync<Army>(TestJson.Options);
+        Assert.Equal(account.Id, created!.OwnerAccountId);
+    }
+
+    [Fact]
+    public async Task Create_WithoutOwnerAccount_ReturnsCreated()
+    {
+        var faction = await CreateFactionAsync("Cygnar-No-Owner");
+        var army = new Army { Name = "Unowned Army", FactionId = faction.Id, PointLimit = 50 };
+
+        var response = await _client.PostAsJsonAsync("/api/armies", army, TestJson.Options);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        var created = await response.Content.ReadFromJsonAsync<Army>(TestJson.Options);
+        Assert.Null(created!.OwnerAccountId);
+    }
 }
