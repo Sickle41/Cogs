@@ -6,4 +6,5 @@ public class Army : IEntity
     public string Name { get; set; } = string.Empty;
     public Guid FactionId { get; set; }
     public int PointLimit { get; set; }
+    public Guid? OwnerAccountId { get; set; }
 }

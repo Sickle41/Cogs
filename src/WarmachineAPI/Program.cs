@@ -23,6 +23,7 @@ builder.Services.AddSingleton<IRepository<DeploymentZone>, InMemoryRepository<De
 builder.Services.AddSingleton<IRepository<Scenario>, InMemoryRepository<Scenario>>();
 builder.Services.AddSingleton<IRepository<ControlZone>, InMemoryRepository<ControlZone>>();
 builder.Services.AddSingleton<IRepository<CombatLogEntry>, InMemoryRepository<CombatLogEntry>>();
+builder.Services.AddSingleton<IRepository<Account>, InMemoryRepository<Account>>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

@@ -123,6 +123,21 @@ Content-Type: application/json
 
 ###
 
+GET {{WarmachineAPI_HostAddress}}/api/accounts
+Accept: application/json
+
+###
+
+POST {{WarmachineAPI_HostAddress}}/api/accounts
+Content-Type: application/json
+
+{
+  "displayName": "Sickle41",
+  "email": "sickle41@example.com"
+}
+
+###
+
 GET {{WarmachineAPI_HostAddress}}/api/armies
 Accept: application/json
 
@@ -134,7 +149,8 @@ Content-Type: application/json
 {
   "name": "Stryker's Command",
   "factionId": "00000000-0000-0000-0000-000000000000",
-  "pointLimit": 50
+  "pointLimit": 50,
+  "ownerAccountId": null
 }
 
 ###
