@@ -19,6 +19,7 @@ builder.Services.AddSingleton<IRepository<GameParticipant>, InMemoryRepository<G
 builder.Services.AddSingleton<IRepository<ModelInstance>, InMemoryRepository<ModelInstance>>();
 builder.Services.AddSingleton<IRepository<Spell>, InMemoryRepository<Spell>>();
 builder.Services.AddSingleton<IRepository<Ability>, InMemoryRepository<Ability>>();
+builder.Services.AddSingleton<IRepository<DeploymentZone>, InMemoryRepository<DeploymentZone>>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
