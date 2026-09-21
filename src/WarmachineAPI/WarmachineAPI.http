@@ -266,3 +266,21 @@ Content-Type: application/json
 POST {{WarmachineAPI_HostAddress}}/api/sessions/00000000-0000-0000-0000-000000000000/reset-activations
 
 ###
+
+GET {{WarmachineAPI_HostAddress}}/api/sessions/00000000-0000-0000-0000-000000000000/log
+Accept: application/json
+
+###
+
+POST {{WarmachineAPI_HostAddress}}/api/sessions/00000000-0000-0000-0000-000000000000/log
+Content-Type: application/json
+
+{
+  "round": 1,
+  "eventType": "MeleeAttack",
+  "actorModelInstanceId": "00000000-0000-0000-0000-000000000000",
+  "targetModelInstanceId": "00000000-0000-0000-0000-000000000000",
+  "description": "Swung sword."
+}
+
+###

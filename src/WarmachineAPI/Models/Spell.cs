@@ -10,5 +10,6 @@ public class Spell : IEntity
     public int Aoe { get; set; }
     public int Pow { get; set; }
     public bool IsUpkeep { get; set; }
+    public bool IsOffensive { get; set; }
     public string Description { get; set; } = string.Empty;
 }
