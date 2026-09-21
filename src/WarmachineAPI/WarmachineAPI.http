@@ -154,6 +154,34 @@ Accept: application/json
 
 ###
 
+GET {{WarmachineAPI_HostAddress}}/api/scenarios
+Accept: application/json
+
+###
+
+POST {{WarmachineAPI_HostAddress}}/api/scenarios
+Content-Type: application/json
+
+{
+  "name": "Incursion",
+  "description": "Control zones and flags."
+}
+
+###
+
+POST {{WarmachineAPI_HostAddress}}/api/scenarios/00000000-0000-0000-0000-000000000000/zones
+Content-Type: application/json
+
+{
+  "name": "Center Flag",
+  "x": 609.6,
+  "y": 609.6,
+  "radius": 40,
+  "pointsPerTurn": 2
+}
+
+###
+
 GET {{WarmachineAPI_HostAddress}}/api/sessions
 Accept: application/json
 
@@ -164,6 +192,7 @@ Content-Type: application/json
 
 {
   "mapId": "00000000-0000-0000-0000-000000000000",
+  "scenarioId": null,
   "status": "Setup",
   "currentRound": 1
 }

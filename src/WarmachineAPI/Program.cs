@@ -20,6 +20,8 @@ builder.Services.AddSingleton<IRepository<ModelInstance>, InMemoryRepository<Mod
 builder.Services.AddSingleton<IRepository<Spell>, InMemoryRepository<Spell>>();
 builder.Services.AddSingleton<IRepository<Ability>, InMemoryRepository<Ability>>();
 builder.Services.AddSingleton<IRepository<DeploymentZone>, InMemoryRepository<DeploymentZone>>();
+builder.Services.AddSingleton<IRepository<Scenario>, InMemoryRepository<Scenario>>();
+builder.Services.AddSingleton<IRepository<ControlZone>, InMemoryRepository<ControlZone>>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
