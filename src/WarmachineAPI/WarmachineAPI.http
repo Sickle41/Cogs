@@ -41,6 +41,31 @@ Content-Type: application/json
 
 ###
 
+POST {{WarmachineAPI_HostAddress}}/api/units/00000000-0000-0000-0000-000000000000/spells
+Content-Type: application/json
+
+{
+  "name": "Arcane Bolt",
+  "cost": 2,
+  "range": 10,
+  "aoe": 0,
+  "pow": 10,
+  "isUpkeep": false,
+  "description": "A bolt of raw energy."
+}
+
+###
+
+POST {{WarmachineAPI_HostAddress}}/api/units/00000000-0000-0000-0000-000000000000/abilities
+Content-Type: application/json
+
+{
+  "name": "Pathfinder",
+  "description": "Ignores rough terrain."
+}
+
+###
+
 GET {{WarmachineAPI_HostAddress}}/api/maps
 Accept: application/json
 
