@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using WarmachineAPI.Controllers;
 using WarmachineAPI.Models;
 
 namespace WarmachineAPI.Tests;
@@ -19,9 +20,9 @@ public class ArmyEntriesControllerTests : IClassFixture<WarmachineApiFactory>
         return (await response.Content.ReadFromJsonAsync<Faction>(TestJson.Options))!;
     }
 
-    private async Task<UnitDefinition> CreateUnitAsync(Guid factionId, string name)
+    private async Task<UnitDefinition> CreateUnitAsync(Guid factionId, string name, UnitCategory category = UnitCategory.Unit)
     {
-        var unit = new UnitDefinition { FactionId = factionId, Name = name, Category = UnitCategory.Unit, PointCost = 3 };
+        var unit = new UnitDefinition { FactionId = factionId, Name = name, Category = category, PointCost = 3 };
         var response = await _client.PostAsJsonAsync("/api/units", unit, TestJson.Options);
         return (await response.Content.ReadFromJsonAsync<UnitDefinition>(TestJson.Options))!;
     }
@@ -158,5 +159,110 @@ public class ArmyEntriesControllerTests : IClassFixture<WarmachineApiFactory>
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         var created = await response.Content.ReadFromJsonAsync<ArmyEntry>(TestJson.Options);
         Assert.Equal(attachment.Id, created!.UnitAttachmentId);
+    }
+
+    [Fact]
+    public async Task Create_WithNonExistentBattlegroupCaster_ReturnsBadRequest()
+    {
+        var faction = await CreateFactionAsync("Cygnar-BG-Bad-Caster");
+        var army = await CreateArmyAsync(faction.Id, "Bad Caster List");
+        var jack = await CreateUnitAsync(faction.Id, "Ironclad", UnitCategory.Warjack);
+
+        var entry = new ArmyEntry { UnitDefinitionId = jack.Id, Quantity = 1, BattlegroupCasterEntryId = Guid.NewGuid() };
+        var response = await _client.PostAsJsonAsync($"/api/armies/{army.Id}/entries", entry, TestJson.Options);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Create_WithCasterFromDifferentArmy_ReturnsBadRequest()
+    {
+        var faction = await CreateFactionAsync("Cygnar-BG-Different-Army");
+        var armyA = await CreateArmyAsync(faction.Id, "Army A");
+        var armyB = await CreateArmyAsync(faction.Id, "Army B");
+        var caster = await CreateUnitAsync(faction.Id, "Commander Stryker", UnitCategory.Warcaster);
+        var jack = await CreateUnitAsync(faction.Id, "Ironclad", UnitCategory.Warjack);
+
+        var casterEntryResponse = await _client.PostAsJsonAsync($"/api/armies/{armyB.Id}/entries", new ArmyEntry { UnitDefinitionId = caster.Id, Quantity = 1 }, TestJson.Options);
+        var casterEntry = await casterEntryResponse.Content.ReadFromJsonAsync<ArmyEntry>(TestJson.Options);
+
+        var jackEntry = new ArmyEntry { UnitDefinitionId = jack.Id, Quantity = 1, BattlegroupCasterEntryId = casterEntry!.Id };
+        var response = await _client.PostAsJsonAsync($"/api/armies/{armyA.Id}/entries", jackEntry, TestJson.Options);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Create_WithNonCasterAsBattlegroupCaster_ReturnsBadRequest()
+    {
+        var faction = await CreateFactionAsync("Cygnar-BG-Not-A-Caster");
+        var army = await CreateArmyAsync(faction.Id, "Not A Caster List");
+        var notACaster = await CreateUnitAsync(faction.Id, "Stormblade");
+        var jack = await CreateUnitAsync(faction.Id, "Ironclad", UnitCategory.Warjack);
+
+        var notCasterEntryResponse = await _client.PostAsJsonAsync($"/api/armies/{army.Id}/entries", new ArmyEntry { UnitDefinitionId = notACaster.Id, Quantity = 6 }, TestJson.Options);
+        var notCasterEntry = await notCasterEntryResponse.Content.ReadFromJsonAsync<ArmyEntry>(TestJson.Options);
+
+        var jackEntry = new ArmyEntry { UnitDefinitionId = jack.Id, Quantity = 1, BattlegroupCasterEntryId = notCasterEntry!.Id };
+        var response = await _client.PostAsJsonAsync($"/api/armies/{army.Id}/entries", jackEntry, TestJson.Options);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Create_WithValidWarcasterAsBattlegroupCaster_ReturnsCreated()
+    {
+        var faction = await CreateFactionAsync("Cygnar-BG-Valid");
+        var army = await CreateArmyAsync(faction.Id, "Valid Battlegroup List");
+        var caster = await CreateUnitAsync(faction.Id, "Commander Stryker", UnitCategory.Warcaster);
+        var jack = await CreateUnitAsync(faction.Id, "Ironclad", UnitCategory.Warjack);
+
+        var casterEntryResponse = await _client.PostAsJsonAsync($"/api/armies/{army.Id}/entries", new ArmyEntry { UnitDefinitionId = caster.Id, Quantity = 1 }, TestJson.Options);
+        var casterEntry = await casterEntryResponse.Content.ReadFromJsonAsync<ArmyEntry>(TestJson.Options);
+
+        var jackEntry = new ArmyEntry { UnitDefinitionId = jack.Id, Quantity = 1, BattlegroupCasterEntryId = casterEntry!.Id };
+        var response = await _client.PostAsJsonAsync($"/api/armies/{army.Id}/entries", jackEntry, TestJson.Options);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var created = await response.Content.ReadFromJsonAsync<ArmyEntry>(TestJson.Options);
+        Assert.Equal(casterEntry.Id, created!.BattlegroupCasterEntryId);
+    }
+
+    [Fact]
+    public async Task GetBattlegroups_GroupsJacksUnderTheirCaster()
+    {
+        var faction = await CreateFactionAsync("Cygnar-BG-Grouping");
+        var army = await CreateArmyAsync(faction.Id, "Grouping List");
+        var caster = await CreateUnitAsync(faction.Id, "Commander Stryker", UnitCategory.Warcaster);
+        var jack = await CreateUnitAsync(faction.Id, "Ironclad", UnitCategory.Warjack);
+        var unit = await CreateUnitAsync(faction.Id, "Stormblade");
+
+        var casterEntryResponse = await _client.PostAsJsonAsync($"/api/armies/{army.Id}/entries", new ArmyEntry { UnitDefinitionId = caster.Id, Quantity = 1 }, TestJson.Options);
+        var casterEntry = await casterEntryResponse.Content.ReadFromJsonAsync<ArmyEntry>(TestJson.Options);
+
+        var jackEntryResponse = await _client.PostAsJsonAsync($"/api/armies/{army.Id}/entries", new ArmyEntry { UnitDefinitionId = jack.Id, Quantity = 1, BattlegroupCasterEntryId = casterEntry!.Id }, TestJson.Options);
+        var jackEntry = await jackEntryResponse.Content.ReadFromJsonAsync<ArmyEntry>(TestJson.Options);
+
+        await _client.PostAsJsonAsync($"/api/armies/{army.Id}/entries", new ArmyEntry { UnitDefinitionId = unit.Id, Quantity = 6 }, TestJson.Options);
+
+        var response = await _client.GetAsync($"/api/armies/{army.Id}/battlegroups");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var battlegroups = await response.Content.ReadFromJsonAsync<List<Battlegroup>>(TestJson.Options);
+        Assert.NotNull(battlegroups);
+
+        var casterGroup = battlegroups.Single(g => g.Caster?.Id == casterEntry.Id);
+        Assert.Contains(casterGroup.Members, m => m.Id == jackEntry!.Id);
+
+        var unassignedGroup = battlegroups.Single(g => g.Caster == null);
+        Assert.Contains(unassignedGroup.Members, m => m.UnitDefinitionId == unit.Id);
+        Assert.Contains(unassignedGroup.Members, m => m.Id == casterEntry.Id);
+    }
+
+    [Fact]
+    public async Task GetBattlegroups_NonExistentArmy_ReturnsNotFound()
+    {
+        var response = await _client.GetAsync($"/api/armies/{Guid.NewGuid()}/battlegroups");
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 }
