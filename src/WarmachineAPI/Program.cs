@@ -11,6 +11,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers()
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
+builder.Services.AddProblemDetails();
+
 builder.Services.AddDbContext<WarmachineDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("Default")));
 
@@ -42,6 +44,8 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<WarmachineDbContext>();
     db.Database.Migrate();
 }
+
+app.UseExceptionHandler();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

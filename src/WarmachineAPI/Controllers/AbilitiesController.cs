@@ -21,7 +21,7 @@ public class AbilitiesController : ControllerBase
     {
         if (_units.GetById(unitId) is null)
         {
-            return NotFound($"Unit '{unitId}' does not exist.");
+            return this.ProblemNotFound($"Unit '{unitId}' does not exist.");
         }
 
         return Ok(_abilities.GetAll().Where(a => a.UnitDefinitionId == unitId));
@@ -32,7 +32,7 @@ public class AbilitiesController : ControllerBase
     {
         if (_units.GetById(unitId) is null)
         {
-            return BadRequest($"Unit '{unitId}' does not exist.");
+            return this.ProblemBadRequest($"Unit '{unitId}' does not exist.");
         }
 
         ability.UnitDefinitionId = unitId;
@@ -52,7 +52,7 @@ public class AbilitiesController : ControllerBase
     {
         if (_units.GetById(ability.UnitDefinitionId) is null)
         {
-            return BadRequest($"Unit '{ability.UnitDefinitionId}' does not exist.");
+            return this.ProblemBadRequest($"Unit '{ability.UnitDefinitionId}' does not exist.");
         }
 
         return _abilities.Update(id, ability) ? NoContent() : NotFound();

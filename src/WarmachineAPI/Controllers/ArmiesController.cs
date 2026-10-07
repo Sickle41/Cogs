@@ -76,12 +76,12 @@ public class ArmiesController : ControllerBase
     {
         if (_factions.GetById(army.FactionId) is null)
         {
-            return BadRequest($"Faction '{army.FactionId}' does not exist.");
+            return this.ProblemBadRequest($"Faction '{army.FactionId}' does not exist.");
         }
 
         if (army.OwnerAccountId.HasValue && _accounts.GetById(army.OwnerAccountId.Value) is null)
         {
-            return BadRequest($"Account '{army.OwnerAccountId}' does not exist.");
+            return this.ProblemBadRequest($"Account '{army.OwnerAccountId}' does not exist.");
         }
 
         var created = _armies.Create(army);
@@ -93,12 +93,12 @@ public class ArmiesController : ControllerBase
     {
         if (_factions.GetById(army.FactionId) is null)
         {
-            return BadRequest($"Faction '{army.FactionId}' does not exist.");
+            return this.ProblemBadRequest($"Faction '{army.FactionId}' does not exist.");
         }
 
         if (army.OwnerAccountId.HasValue && _accounts.GetById(army.OwnerAccountId.Value) is null)
         {
-            return BadRequest($"Account '{army.OwnerAccountId}' does not exist.");
+            return this.ProblemBadRequest($"Account '{army.OwnerAccountId}' does not exist.");
         }
 
         return _armies.Update(id, army) ? NoContent() : NotFound();

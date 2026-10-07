@@ -26,7 +26,7 @@ public class ArmyEntriesController : ControllerBase
     {
         if (_armies.GetById(armyId) is null)
         {
-            return NotFound($"Army '{armyId}' does not exist.");
+            return this.ProblemNotFound($"Army '{armyId}' does not exist.");
         }
 
         return Ok(_entries.GetAll().Where(e => e.ArmyId == armyId));
@@ -38,18 +38,18 @@ public class ArmyEntriesController : ControllerBase
         var army = _armies.GetById(armyId);
         if (army is null)
         {
-            return BadRequest($"Army '{armyId}' does not exist.");
+            return this.ProblemBadRequest($"Army '{armyId}' does not exist.");
         }
 
         var unit = _units.GetById(entry.UnitDefinitionId);
         if (unit is null)
         {
-            return BadRequest($"Unit '{entry.UnitDefinitionId}' does not exist.");
+            return this.ProblemBadRequest($"Unit '{entry.UnitDefinitionId}' does not exist.");
         }
 
         if (unit.FactionId != army.FactionId)
         {
-            return BadRequest($"Unit '{unit.Name}' belongs to a different faction than army '{army.Name}'.");
+            return this.ProblemBadRequest($"Unit '{unit.Name}' belongs to a different faction than army '{army.Name}'.");
         }
 
         entry.ArmyId = armyId;
@@ -70,18 +70,18 @@ public class ArmyEntriesController : ControllerBase
         var army = _armies.GetById(entry.ArmyId);
         if (army is null)
         {
-            return BadRequest($"Army '{entry.ArmyId}' does not exist.");
+            return this.ProblemBadRequest($"Army '{entry.ArmyId}' does not exist.");
         }
 
         var unit = _units.GetById(entry.UnitDefinitionId);
         if (unit is null)
         {
-            return BadRequest($"Unit '{entry.UnitDefinitionId}' does not exist.");
+            return this.ProblemBadRequest($"Unit '{entry.UnitDefinitionId}' does not exist.");
         }
 
         if (unit.FactionId != army.FactionId)
         {
-            return BadRequest($"Unit '{unit.Name}' belongs to a different faction than army '{army.Name}'.");
+            return this.ProblemBadRequest($"Unit '{unit.Name}' belongs to a different faction than army '{army.Name}'.");
         }
 
         return _entries.Update(id, entry) ? NoContent() : NotFound();

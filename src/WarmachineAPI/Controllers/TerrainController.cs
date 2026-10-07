@@ -21,7 +21,7 @@ public class TerrainController : ControllerBase
     {
         if (_maps.GetById(mapId) is null)
         {
-            return NotFound($"Map '{mapId}' does not exist.");
+            return this.ProblemNotFound($"Map '{mapId}' does not exist.");
         }
 
         return Ok(_terrain.GetAll().Where(t => t.MapId == mapId));
@@ -32,7 +32,7 @@ public class TerrainController : ControllerBase
     {
         if (_maps.GetById(mapId) is null)
         {
-            return BadRequest($"Map '{mapId}' does not exist.");
+            return this.ProblemBadRequest($"Map '{mapId}' does not exist.");
         }
 
         terrain.MapId = mapId;
@@ -52,7 +52,7 @@ public class TerrainController : ControllerBase
     {
         if (_maps.GetById(terrain.MapId) is null)
         {
-            return BadRequest($"Map '{terrain.MapId}' does not exist.");
+            return this.ProblemBadRequest($"Map '{terrain.MapId}' does not exist.");
         }
 
         return _terrain.Update(id, terrain) ? NoContent() : NotFound();

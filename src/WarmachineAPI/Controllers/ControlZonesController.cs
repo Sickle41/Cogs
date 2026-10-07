@@ -21,7 +21,7 @@ public class ControlZonesController : ControllerBase
     {
         if (_scenarios.GetById(scenarioId) is null)
         {
-            return NotFound($"Scenario '{scenarioId}' does not exist.");
+            return this.ProblemNotFound($"Scenario '{scenarioId}' does not exist.");
         }
 
         return Ok(_zones.GetAll().Where(z => z.ScenarioId == scenarioId));
@@ -32,7 +32,7 @@ public class ControlZonesController : ControllerBase
     {
         if (_scenarios.GetById(scenarioId) is null)
         {
-            return BadRequest($"Scenario '{scenarioId}' does not exist.");
+            return this.ProblemBadRequest($"Scenario '{scenarioId}' does not exist.");
         }
 
         zone.ScenarioId = scenarioId;
@@ -52,7 +52,7 @@ public class ControlZonesController : ControllerBase
     {
         if (_scenarios.GetById(zone.ScenarioId) is null)
         {
-            return BadRequest($"Scenario '{zone.ScenarioId}' does not exist.");
+            return this.ProblemBadRequest($"Scenario '{zone.ScenarioId}' does not exist.");
         }
 
         return _zones.Update(id, zone) ? NoContent() : NotFound();

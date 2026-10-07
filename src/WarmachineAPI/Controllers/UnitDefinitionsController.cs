@@ -41,7 +41,7 @@ public class UnitDefinitionsController : ControllerBase
     {
         if (_factions.GetById(unit.FactionId) is null)
         {
-            return BadRequest($"Faction '{unit.FactionId}' does not exist.");
+            return this.ProblemBadRequest($"Faction '{unit.FactionId}' does not exist.");
         }
 
         var created = _units.Create(unit);
@@ -53,7 +53,7 @@ public class UnitDefinitionsController : ControllerBase
     {
         if (_factions.GetById(unit.FactionId) is null)
         {
-            return BadRequest($"Faction '{unit.FactionId}' does not exist.");
+            return this.ProblemBadRequest($"Faction '{unit.FactionId}' does not exist.");
         }
 
         return _units.Update(id, unit) ? NoContent() : NotFound();
