@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using WarmachineAPI.Data;
 using WarmachineAPI.Models;
@@ -33,6 +34,9 @@ builder.Services.AddScoped<IRepository<ControlZone>, EfRepository<ControlZone>>(
 builder.Services.AddScoped<IRepository<CombatLogEntry>, EfRepository<CombatLogEntry>>();
 builder.Services.AddScoped<IRepository<Account>, EfRepository<Account>>();
 
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<WarmachineDbContext>();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -59,6 +63,9 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHealthChecks("/health");
+app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
 
 app.Run();
 
