@@ -29,6 +29,7 @@ public class WarmachineDbContext : DbContext
     public DbSet<ControlZone> ControlZones => Set<ControlZone>();
     public DbSet<CombatLogEntry> CombatLogEntries => Set<CombatLogEntry>();
     public DbSet<Account> Accounts => Set<Account>();
+    public DbSet<UnitAttachment> UnitAttachments => Set<UnitAttachment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

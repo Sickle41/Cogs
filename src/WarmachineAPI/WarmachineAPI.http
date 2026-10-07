@@ -71,6 +71,17 @@ Content-Type: application/json
 
 ###
 
+POST {{WarmachineAPI_HostAddress}}/api/units/00000000-0000-0000-0000-000000000000/attachments
+Content-Type: application/json
+
+{
+  "name": "Thumper Cannon",
+  "pointCost": 2,
+  "description": "A heavy ordnance upgrade."
+}
+
+###
+
 GET {{WarmachineAPI_HostAddress}}/api/maps
 Accept: application/json
 
@@ -183,7 +194,8 @@ Content-Type: application/json
 
 {
   "unitDefinitionId": "00000000-0000-0000-0000-000000000000",
-  "quantity": 6
+  "quantity": 6,
+  "unitAttachmentId": null
 }
 
 ###
