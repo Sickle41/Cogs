@@ -12,4 +12,6 @@ public class ArmyEntry : IEntity
     public int Quantity { get; set; } = 1;
 
     public Guid? UnitAttachmentId { get; set; }
+
+    public Guid? BattlegroupCasterEntryId { get; set; }
 }

@@ -4,6 +4,12 @@ using WarmachineAPI.Services;
 
 namespace WarmachineAPI.Controllers;
 
+public class Battlegroup
+{
+    public ArmyEntry? Caster { get; set; }
+    public List<ArmyEntry> Members { get; set; } = new();
+}
+
 [ApiController]
 public class ArmyEntriesController : ControllerBase
 {
@@ -46,6 +52,40 @@ public class ArmyEntriesController : ControllerBase
         return null;
     }
 
+    private ActionResult? ValidateBattlegroupCaster(ArmyEntry entry, Guid armyId, Guid? currentEntryId)
+    {
+        if (!entry.BattlegroupCasterEntryId.HasValue)
+        {
+            return null;
+        }
+
+        if (entry.BattlegroupCasterEntryId.Value == currentEntryId)
+        {
+            return this.ProblemBadRequest("An army entry cannot be its own battlegroup caster.");
+        }
+
+        var casterEntry = _entries.GetById(entry.BattlegroupCasterEntryId.Value);
+        if (casterEntry is null)
+        {
+            return this.ProblemBadRequest($"Battlegroup caster entry '{entry.BattlegroupCasterEntryId}' does not exist.");
+        }
+
+        if (casterEntry.ArmyId != armyId)
+        {
+            return this.ProblemBadRequest(
+                $"Battlegroup caster entry '{entry.BattlegroupCasterEntryId}' does not belong to army '{armyId}'.");
+        }
+
+        var casterUnit = _units.GetById(casterEntry.UnitDefinitionId);
+        if (casterUnit is null || (casterUnit.Category != UnitCategory.Warcaster && casterUnit.Category != UnitCategory.Warlock))
+        {
+            return this.ProblemBadRequest(
+                $"Battlegroup caster entry '{entry.BattlegroupCasterEntryId}' is not a warcaster or warlock.");
+        }
+
+        return null;
+    }
+
     [HttpGet("api/armies/{armyId:guid}/entries")]
     public ActionResult<IEnumerable<ArmyEntry>> GetForArmy(Guid armyId)
     {
@@ -55,6 +95,27 @@ public class ArmyEntriesController : ControllerBase
         }
 
         return Ok(_entries.GetAll().Where(e => e.ArmyId == armyId));
+    }
+
+    [HttpGet("api/armies/{armyId:guid}/battlegroups")]
+    public ActionResult<IEnumerable<Battlegroup>> GetBattlegroups(Guid armyId)
+    {
+        if (_armies.GetById(armyId) is null)
+        {
+            return this.ProblemNotFound($"Army '{armyId}' does not exist.");
+        }
+
+        var entries = _entries.GetAll().Where(e => e.ArmyId == armyId).ToList();
+
+        var battlegroups = entries
+            .GroupBy(e => e.BattlegroupCasterEntryId)
+            .Select(g => new Battlegroup
+            {
+                Caster = g.Key.HasValue ? entries.FirstOrDefault(e => e.Id == g.Key.Value) : null,
+                Members = g.ToList()
+            });
+
+        return Ok(battlegroups);
     }
 
     [HttpPost("api/armies/{armyId:guid}/entries")]
@@ -80,6 +141,11 @@ public class ArmyEntriesController : ControllerBase
         if (ValidateUnitAttachment(entry) is ActionResult attachmentError)
         {
             return attachmentError;
+        }
+
+        if (ValidateBattlegroupCaster(entry, armyId, currentEntryId: null) is ActionResult casterError)
+        {
+            return casterError;
         }
 
         entry.ArmyId = armyId;
@@ -117,6 +183,11 @@ public class ArmyEntriesController : ControllerBase
         if (ValidateUnitAttachment(entry) is ActionResult attachmentError)
         {
             return attachmentError;
+        }
+
+        if (ValidateBattlegroupCaster(entry, entry.ArmyId, currentEntryId: id) is ActionResult casterError)
+        {
+            return casterError;
         }
 
         return _entries.Update(id, entry) ? NoContent() : NotFound();

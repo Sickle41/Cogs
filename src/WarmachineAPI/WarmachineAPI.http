@@ -195,8 +195,14 @@ Content-Type: application/json
 {
   "unitDefinitionId": "00000000-0000-0000-0000-000000000000",
   "quantity": 6,
-  "unitAttachmentId": null
+  "unitAttachmentId": null,
+  "battlegroupCasterEntryId": null
 }
+
+###
+
+GET {{WarmachineAPI_HostAddress}}/api/armies/00000000-0000-0000-0000-000000000000/battlegroups
+Accept: application/json
 
 ###
 
