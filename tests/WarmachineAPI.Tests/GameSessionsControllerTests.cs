@@ -103,4 +103,24 @@ public class GameSessionsControllerTests : IClassFixture<WarmachineApiFactory>
         var created = await response.Content.ReadFromJsonAsync<GameSession>(TestJson.Options);
         Assert.Null(created!.ScenarioId);
     }
+
+    [Fact]
+    public async Task Update_PreservesCreatedAt_ButAdvancesUpdatedAt()
+    {
+        var map = await CreateMapAsync("Session Audit Board");
+        var createResponse = await _client.PostAsJsonAsync("/api/sessions", new GameSession { MapId = map.Id }, TestJson.Options);
+        var created = await createResponse.Content.ReadFromJsonAsync<GameSession>(TestJson.Options);
+
+        await Task.Delay(50);
+
+        created!.Status = SessionStatus.InProgress;
+        var updateResponse = await _client.PutAsJsonAsync($"/api/sessions/{created.Id}", created, TestJson.Options);
+        Assert.Equal(HttpStatusCode.NoContent, updateResponse.StatusCode);
+
+        var getResponse = await _client.GetAsync($"/api/sessions/{created.Id}");
+        var fetched = await getResponse.Content.ReadFromJsonAsync<GameSession>(TestJson.Options);
+
+        Assert.Equal(created.CreatedAt, fetched!.CreatedAt);
+        Assert.True(fetched.UpdatedAt > fetched.CreatedAt);
+    }
 }

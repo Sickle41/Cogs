@@ -175,4 +175,39 @@ public class ArmiesControllerTests : IClassFixture<WarmachineApiFactory>
         var response = await _client.PostAsJsonAsync("/api/armies", army, TestJson.Options);
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Create_SetsCreatedAtAndUpdatedAtToNow()
+    {
+        var faction = await CreateFactionAsync("Cygnar-Audit-Create");
+        var before = DateTime.UtcNow;
+
+        var response = await _client.PostAsJsonAsync("/api/armies", new Army { Name = "Audit Army", FactionId = faction.Id, PointLimit = 50 }, TestJson.Options);
+        var created = await response.Content.ReadFromJsonAsync<Army>(TestJson.Options);
+
+        var after = DateTime.UtcNow;
+
+        Assert.InRange(created!.CreatedAt, before.AddSeconds(-1), after.AddSeconds(1));
+        Assert.Equal(created.CreatedAt, created.UpdatedAt);
+    }
+
+    [Fact]
+    public async Task Update_PreservesCreatedAt_ButAdvancesUpdatedAt()
+    {
+        var faction = await CreateFactionAsync("Cygnar-Audit-Update");
+        var createResponse = await _client.PostAsJsonAsync("/api/armies", new Army { Name = "Audit Army Before", FactionId = faction.Id, PointLimit = 50 }, TestJson.Options);
+        var created = await createResponse.Content.ReadFromJsonAsync<Army>(TestJson.Options);
+
+        await Task.Delay(50);
+
+        created!.Name = "Audit Army After";
+        var updateResponse = await _client.PutAsJsonAsync($"/api/armies/{created.Id}", created, TestJson.Options);
+        Assert.Equal(HttpStatusCode.NoContent, updateResponse.StatusCode);
+
+        var getResponse = await _client.GetAsync($"/api/armies/{created.Id}");
+        var fetched = await getResponse.Content.ReadFromJsonAsync<Army>(TestJson.Options);
+
+        Assert.Equal(created.CreatedAt, fetched!.CreatedAt);
+        Assert.True(fetched.UpdatedAt > fetched.CreatedAt);
+    }
 }

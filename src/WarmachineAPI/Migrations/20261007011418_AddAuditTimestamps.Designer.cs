@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WarmachineAPI.Data;
 
@@ -10,9 +11,11 @@ using WarmachineAPI.Data;
 namespace WarmachineAPI.Migrations
 {
     [DbContext(typeof(WarmachineDbContext))]
-    partial class WarmachineDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261007011418_AddAuditTimestamps")]
+    partial class AddAuditTimestamps
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.11");

@@ -1,6 +1,6 @@
 namespace WarmachineAPI.Models;
 
-public class ModelInstance : IEntity
+public class ModelInstance : IEntity, IAuditable
 {
     public Guid Id { get; set; }
     public Guid GameSessionId { get; set; }
@@ -13,4 +13,6 @@ public class ModelInstance : IEntity
     public List<StatusEffect> StatusEffects { get; set; } = new();
     public List<DamageColumnState> DamageGrid { get; set; } = new();
     public bool HasActivated { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 }
