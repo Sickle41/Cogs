@@ -1,11 +1,18 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace WarmachineAPI.Models;
 
 public class UnitDefinition : IEntity
 {
     public Guid Id { get; set; }
     public Guid FactionId { get; set; }
+
+    [Required, MaxLength(100)]
     public string Name { get; set; } = string.Empty;
+
     public UnitCategory Category { get; set; }
+
+    [Range(0, int.MaxValue)]
     public int PointCost { get; set; }
     public BaseSize BaseSize { get; set; } = BaseSize.Medium;
     public int Speed { get; set; }

@@ -76,4 +76,14 @@ public class DeploymentZonesControllerTests : IClassFixture<WarmachineApiFactory
         var getResponse = await _client.GetAsync($"/api/deployment-zones/{created.Id}");
         Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
     }
+
+    [Fact]
+    public async Task Create_WithEmptyName_ReturnsBadRequest()
+    {
+        var map = await CreateMapAsync("Validation Deployment Board");
+        var zone = new DeploymentZone { Name = "", Width = 100, Height = 200 };
+
+        var response = await _client.PostAsJsonAsync($"/api/maps/{map.Id}/deployment-zones", zone, TestJson.Options);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
 }

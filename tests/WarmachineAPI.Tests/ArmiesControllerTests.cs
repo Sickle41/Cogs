@@ -165,4 +165,14 @@ public class ArmiesControllerTests : IClassFixture<WarmachineApiFactory>
         var created = await response.Content.ReadFromJsonAsync<Army>(TestJson.Options);
         Assert.Null(created!.OwnerAccountId);
     }
+
+    [Fact]
+    public async Task Create_WithNegativePointLimit_ReturnsBadRequest()
+    {
+        var faction = await CreateFactionAsync("Cygnar-Negative-Limit");
+        var army = new Army { Name = "Invalid Army", FactionId = faction.Id, PointLimit = -10 };
+
+        var response = await _client.PostAsJsonAsync("/api/armies", army, TestJson.Options);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
 }

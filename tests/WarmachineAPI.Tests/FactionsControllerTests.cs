@@ -81,4 +81,13 @@ public class FactionsControllerTests : IClassFixture<WarmachineApiFactory>
         var response = await _client.GetAsync($"/api/factions/{Guid.NewGuid()}");
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Create_WithEmptyName_ReturnsBadRequest()
+    {
+        var faction = new Faction { Name = "", Description = "No name." };
+
+        var response = await _client.PostAsJsonAsync("/api/factions", faction, TestJson.Options);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
 }
