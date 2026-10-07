@@ -43,12 +43,12 @@ public class GameSessionsController : ControllerBase
     {
         if (_maps.GetById(session.MapId) is null)
         {
-            return BadRequest($"Map '{session.MapId}' does not exist.");
+            return this.ProblemBadRequest($"Map '{session.MapId}' does not exist.");
         }
 
         if (session.ScenarioId.HasValue && _scenarios.GetById(session.ScenarioId.Value) is null)
         {
-            return BadRequest($"Scenario '{session.ScenarioId}' does not exist.");
+            return this.ProblemBadRequest($"Scenario '{session.ScenarioId}' does not exist.");
         }
 
         var created = _sessions.Create(session);
@@ -60,12 +60,12 @@ public class GameSessionsController : ControllerBase
     {
         if (_maps.GetById(session.MapId) is null)
         {
-            return BadRequest($"Map '{session.MapId}' does not exist.");
+            return this.ProblemBadRequest($"Map '{session.MapId}' does not exist.");
         }
 
         if (session.ScenarioId.HasValue && _scenarios.GetById(session.ScenarioId.Value) is null)
         {
-            return BadRequest($"Scenario '{session.ScenarioId}' does not exist.");
+            return this.ProblemBadRequest($"Scenario '{session.ScenarioId}' does not exist.");
         }
 
         return _sessions.Update(id, session) ? NoContent() : NotFound();
@@ -82,7 +82,7 @@ public class GameSessionsController : ControllerBase
     {
         if (_sessions.GetById(id) is null)
         {
-            return NotFound($"Session '{id}' does not exist.");
+            return this.ProblemNotFound($"Session '{id}' does not exist.");
         }
 
         foreach (var model in _models.GetAll().Where(m => m.GameSessionId == id))

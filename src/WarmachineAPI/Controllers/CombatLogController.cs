@@ -26,7 +26,7 @@ public class CombatLogController : ControllerBase
     {
         if (_sessions.GetById(sessionId) is null)
         {
-            return NotFound($"Session '{sessionId}' does not exist.");
+            return this.ProblemNotFound($"Session '{sessionId}' does not exist.");
         }
 
         return Ok(_entries.GetAll()
@@ -39,17 +39,17 @@ public class CombatLogController : ControllerBase
     {
         if (_sessions.GetById(sessionId) is null)
         {
-            return BadRequest($"Session '{sessionId}' does not exist.");
+            return this.ProblemBadRequest($"Session '{sessionId}' does not exist.");
         }
 
         if (entry.ActorModelInstanceId.HasValue && _models.GetById(entry.ActorModelInstanceId.Value) is null)
         {
-            return BadRequest($"Actor model instance '{entry.ActorModelInstanceId}' does not exist.");
+            return this.ProblemBadRequest($"Actor model instance '{entry.ActorModelInstanceId}' does not exist.");
         }
 
         if (entry.TargetModelInstanceId.HasValue && _models.GetById(entry.TargetModelInstanceId.Value) is null)
         {
-            return BadRequest($"Target model instance '{entry.TargetModelInstanceId}' does not exist.");
+            return this.ProblemBadRequest($"Target model instance '{entry.TargetModelInstanceId}' does not exist.");
         }
 
         entry.GameSessionId = sessionId;

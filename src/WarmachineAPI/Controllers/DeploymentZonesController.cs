@@ -21,7 +21,7 @@ public class DeploymentZonesController : ControllerBase
     {
         if (_maps.GetById(mapId) is null)
         {
-            return NotFound($"Map '{mapId}' does not exist.");
+            return this.ProblemNotFound($"Map '{mapId}' does not exist.");
         }
 
         return Ok(_zones.GetAll().Where(z => z.MapId == mapId));
@@ -32,7 +32,7 @@ public class DeploymentZonesController : ControllerBase
     {
         if (_maps.GetById(mapId) is null)
         {
-            return BadRequest($"Map '{mapId}' does not exist.");
+            return this.ProblemBadRequest($"Map '{mapId}' does not exist.");
         }
 
         zone.MapId = mapId;
@@ -52,7 +52,7 @@ public class DeploymentZonesController : ControllerBase
     {
         if (_maps.GetById(zone.MapId) is null)
         {
-            return BadRequest($"Map '{zone.MapId}' does not exist.");
+            return this.ProblemBadRequest($"Map '{zone.MapId}' does not exist.");
         }
 
         return _zones.Update(id, zone) ? NoContent() : NotFound();

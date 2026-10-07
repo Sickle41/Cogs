@@ -21,7 +21,7 @@ public class SpellsController : ControllerBase
     {
         if (_units.GetById(unitId) is null)
         {
-            return NotFound($"Unit '{unitId}' does not exist.");
+            return this.ProblemNotFound($"Unit '{unitId}' does not exist.");
         }
 
         return Ok(_spells.GetAll().Where(s => s.UnitDefinitionId == unitId));
@@ -32,7 +32,7 @@ public class SpellsController : ControllerBase
     {
         if (_units.GetById(unitId) is null)
         {
-            return BadRequest($"Unit '{unitId}' does not exist.");
+            return this.ProblemBadRequest($"Unit '{unitId}' does not exist.");
         }
 
         spell.UnitDefinitionId = unitId;
@@ -52,7 +52,7 @@ public class SpellsController : ControllerBase
     {
         if (_units.GetById(spell.UnitDefinitionId) is null)
         {
-            return BadRequest($"Unit '{spell.UnitDefinitionId}' does not exist.");
+            return this.ProblemBadRequest($"Unit '{spell.UnitDefinitionId}' does not exist.");
         }
 
         return _spells.Update(id, spell) ? NoContent() : NotFound();

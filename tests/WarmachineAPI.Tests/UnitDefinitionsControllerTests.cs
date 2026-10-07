@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using Microsoft.AspNetCore.Mvc;
 using WarmachineAPI.Models;
 
 namespace WarmachineAPI.Tests;
@@ -57,6 +58,10 @@ public class UnitDefinitionsControllerTests : IClassFixture<WarmachineApiFactory
 
         var response = await _client.PostAsJsonAsync("/api/units", unit, TestJson.Options);
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>(TestJson.Options);
+        Assert.Equal(400, problem!.Status);
+        Assert.Contains("does not exist", problem.Detail);
     }
 
     [Fact]

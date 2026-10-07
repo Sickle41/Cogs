@@ -26,7 +26,7 @@ public class GameParticipantsController : ControllerBase
     {
         if (_sessions.GetById(sessionId) is null)
         {
-            return NotFound($"Session '{sessionId}' does not exist.");
+            return this.ProblemNotFound($"Session '{sessionId}' does not exist.");
         }
 
         return Ok(_participants.GetAll().Where(p => p.GameSessionId == sessionId));
@@ -37,12 +37,12 @@ public class GameParticipantsController : ControllerBase
     {
         if (_sessions.GetById(sessionId) is null)
         {
-            return BadRequest($"Session '{sessionId}' does not exist.");
+            return this.ProblemBadRequest($"Session '{sessionId}' does not exist.");
         }
 
         if (_armies.GetById(participant.ArmyId) is null)
         {
-            return BadRequest($"Army '{participant.ArmyId}' does not exist.");
+            return this.ProblemBadRequest($"Army '{participant.ArmyId}' does not exist.");
         }
 
         participant.GameSessionId = sessionId;

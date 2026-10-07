@@ -45,7 +45,7 @@ public class ModelInstancesController : ControllerBase
     {
         if (_sessions.GetById(sessionId) is null)
         {
-            return NotFound($"Session '{sessionId}' does not exist.");
+            return this.ProblemNotFound($"Session '{sessionId}' does not exist.");
         }
 
         return Ok(_models.GetAll().Where(m => m.GameSessionId == sessionId));
@@ -56,12 +56,12 @@ public class ModelInstancesController : ControllerBase
     {
         if (_sessions.GetById(sessionId) is null)
         {
-            return BadRequest($"Session '{sessionId}' does not exist.");
+            return this.ProblemBadRequest($"Session '{sessionId}' does not exist.");
         }
 
         if (_armyEntries.GetById(model.ArmyEntryId) is null)
         {
-            return BadRequest($"Army entry '{model.ArmyEntryId}' does not exist.");
+            return this.ProblemBadRequest($"Army entry '{model.ArmyEntryId}' does not exist.");
         }
 
         model.GameSessionId = sessionId;
