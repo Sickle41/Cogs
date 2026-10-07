@@ -111,4 +111,52 @@ public class ArmyEntriesControllerTests : IClassFixture<WarmachineApiFactory>
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Create_WithNonExistentAttachment_ReturnsBadRequest()
+    {
+        var faction = await CreateFactionAsync("Cygnar-Entry-Bad-Attachment");
+        var army = await CreateArmyAsync(faction.Id, "Bad Attachment List");
+        var unit = await CreateUnitAsync(faction.Id, "Stormblade");
+
+        var entry = new ArmyEntry { UnitDefinitionId = unit.Id, Quantity = 6, UnitAttachmentId = Guid.NewGuid() };
+        var response = await _client.PostAsJsonAsync($"/api/armies/{army.Id}/entries", entry, TestJson.Options);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Create_WithAttachmentFromDifferentUnit_ReturnsBadRequest()
+    {
+        var faction = await CreateFactionAsync("Cygnar-Entry-Mismatched-Attachment");
+        var army = await CreateArmyAsync(faction.Id, "Mismatched Attachment List");
+        var unit = await CreateUnitAsync(faction.Id, "Stormblade");
+        var otherUnit = await CreateUnitAsync(faction.Id, "Long Gunners");
+
+        var attachmentResponse = await _client.PostAsJsonAsync($"/api/units/{otherUnit.Id}/attachments", new UnitAttachment { Name = "Other Unit's Attachment", PointCost = 1 }, TestJson.Options);
+        var attachment = await attachmentResponse.Content.ReadFromJsonAsync<UnitAttachment>(TestJson.Options);
+
+        var entry = new ArmyEntry { UnitDefinitionId = unit.Id, Quantity = 6, UnitAttachmentId = attachment!.Id };
+        var response = await _client.PostAsJsonAsync($"/api/armies/{army.Id}/entries", entry, TestJson.Options);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Create_WithMatchingAttachment_ReturnsCreated()
+    {
+        var faction = await CreateFactionAsync("Cygnar-Entry-Good-Attachment");
+        var army = await CreateArmyAsync(faction.Id, "Good Attachment List");
+        var unit = await CreateUnitAsync(faction.Id, "Stormblade");
+
+        var attachmentResponse = await _client.PostAsJsonAsync($"/api/units/{unit.Id}/attachments", new UnitAttachment { Name = "Matching Attachment", PointCost = 1 }, TestJson.Options);
+        var attachment = await attachmentResponse.Content.ReadFromJsonAsync<UnitAttachment>(TestJson.Options);
+
+        var entry = new ArmyEntry { UnitDefinitionId = unit.Id, Quantity = 6, UnitAttachmentId = attachment!.Id };
+        var response = await _client.PostAsJsonAsync($"/api/armies/{army.Id}/entries", entry, TestJson.Options);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var created = await response.Content.ReadFromJsonAsync<ArmyEntry>(TestJson.Options);
+        Assert.Equal(attachment.Id, created!.UnitAttachmentId);
+    }
 }
