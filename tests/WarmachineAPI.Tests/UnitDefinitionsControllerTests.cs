@@ -75,10 +75,10 @@ public class UnitDefinitionsControllerTests : IClassFixture<WarmachineApiFactory
         await _client.PostAsJsonAsync("/api/units", BuildUnit(khador.Id, "Winter Guard"), TestJson.Options);
 
         var response = await _client.GetAsync($"/api/units?factionId={cygnar.Id}");
-        var units = await response.Content.ReadFromJsonAsync<List<UnitDefinition>>(TestJson.Options);
+        var page = await response.Content.ReadFromJsonAsync<PagedResult<UnitDefinition>>(TestJson.Options);
 
-        Assert.All(units!, u => Assert.Equal(cygnar.Id, u.FactionId));
-        Assert.Contains(units!, u => u.Id == cygnarUnit!.Id);
+        Assert.All(page!.Items, u => Assert.Equal(cygnar.Id, u.FactionId));
+        Assert.Contains(page.Items, u => u.Id == cygnarUnit!.Id);
     }
 
     [Fact]

@@ -40,9 +40,9 @@ public class FactionsControllerTests : IClassFixture<WarmachineApiFactory>
         var created = await createResponse.Content.ReadFromJsonAsync<Faction>(TestJson.Options);
 
         var listResponse = await _client.GetAsync("/api/factions");
-        var list = await listResponse.Content.ReadFromJsonAsync<List<Faction>>(TestJson.Options);
+        var page = await listResponse.Content.ReadFromJsonAsync<PagedResult<Faction>>(TestJson.Options);
 
-        Assert.Contains(list!, f => f.Id == created!.Id);
+        Assert.Contains(page!.Items, f => f.Id == created!.Id);
     }
 
     [Fact]
@@ -89,5 +89,58 @@ public class FactionsControllerTests : IClassFixture<WarmachineApiFactory>
 
         var response = await _client.PostAsJsonAsync("/api/factions", faction, TestJson.Options);
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetAll_WithoutPageParams_DefaultsToPageOneSize50()
+    {
+        var response = await _client.GetAsync("/api/factions");
+        var page = await response.Content.ReadFromJsonAsync<PagedResult<Faction>>(TestJson.Options);
+
+        Assert.Equal(1, page!.Page);
+        Assert.Equal(50, page.PageSize);
+    }
+
+    [Fact]
+    public async Task GetAll_WithPageSize_LimitsItemCount()
+    {
+        for (var i = 0; i < 3; i++)
+        {
+            await _client.PostAsJsonAsync("/api/factions", new Faction { Name = $"PageSizeTest-{Guid.NewGuid()}" }, TestJson.Options);
+        }
+
+        var response = await _client.GetAsync("/api/factions?page=1&pageSize=2");
+        var page = await response.Content.ReadFromJsonAsync<PagedResult<Faction>>(TestJson.Options);
+
+        Assert.Equal(2, page!.Items.Count);
+        Assert.Equal(1, page.Page);
+        Assert.Equal(2, page.PageSize);
+        Assert.True(page.TotalCount >= 3);
+    }
+
+    [Fact]
+    public async Task GetAll_DifferentPages_ReturnDifferentItems()
+    {
+        await _client.PostAsJsonAsync("/api/factions", new Faction { Name = $"PagingDistinctA-{Guid.NewGuid()}" }, TestJson.Options);
+        await _client.PostAsJsonAsync("/api/factions", new Faction { Name = $"PagingDistinctB-{Guid.NewGuid()}" }, TestJson.Options);
+
+        var page1Response = await _client.GetAsync("/api/factions?page=1&pageSize=1");
+        var page1 = await page1Response.Content.ReadFromJsonAsync<PagedResult<Faction>>(TestJson.Options);
+
+        var page2Response = await _client.GetAsync("/api/factions?page=2&pageSize=1");
+        var page2 = await page2Response.Content.ReadFromJsonAsync<PagedResult<Faction>>(TestJson.Options);
+
+        Assert.Single(page1!.Items);
+        Assert.Single(page2!.Items);
+        Assert.NotEqual(page1.Items[0].Id, page2.Items[0].Id);
+    }
+
+    [Fact]
+    public async Task GetAll_PageSizeOver200_IsCappedAt200()
+    {
+        var response = await _client.GetAsync("/api/factions?pageSize=500");
+        var page = await response.Content.ReadFromJsonAsync<PagedResult<Faction>>(TestJson.Options);
+
+        Assert.Equal(200, page!.PageSize);
     }
 }
