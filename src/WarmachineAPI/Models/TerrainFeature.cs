@@ -1,10 +1,15 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace WarmachineAPI.Models;
 
 public class TerrainFeature : IEntity
 {
     public Guid Id { get; set; }
     public Guid MapId { get; set; }
+
+    [Required, MaxLength(100)]
     public string Name { get; set; } = string.Empty;
+
     public TerrainType TerrainType { get; set; }
     public TerrainShape Shape { get; set; }
 

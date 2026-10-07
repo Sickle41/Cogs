@@ -98,4 +98,17 @@ public class ArmyEntriesControllerTests : IClassFixture<WarmachineApiFactory>
         var getResponse = await _client.GetAsync($"/api/army-entries/{created.Id}");
         Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
     }
+
+    [Fact]
+    public async Task Create_WithZeroQuantity_ReturnsBadRequest()
+    {
+        var faction = await CreateFactionAsync("Cygnar-Entry-Zero-Qty");
+        var army = await CreateArmyAsync(faction.Id, "Zero Qty List");
+        var unit = await CreateUnitAsync(faction.Id, "Stormblade");
+
+        var entry = new ArmyEntry { UnitDefinitionId = unit.Id, Quantity = 0 };
+        var response = await _client.PostAsJsonAsync($"/api/armies/{army.Id}/entries", entry, TestJson.Options);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
 }

@@ -110,4 +110,15 @@ public class UnitDefinitionsControllerTests : IClassFixture<WarmachineApiFactory
         Assert.Equal(3, created!.DamageColumns.Count);
         Assert.Contains(created.DamageColumns, c => c.Name == "Cortex" && c.TotalBoxes == 5);
     }
+
+    [Fact]
+    public async Task Create_WithNegativePointCost_ReturnsBadRequest()
+    {
+        var faction = await CreateFactionAsync("Cygnar-Negative-Cost");
+        var unit = BuildUnit(faction.Id, "Underpriced Unit");
+        unit.PointCost = -1;
+
+        var response = await _client.PostAsJsonAsync("/api/units", unit, TestJson.Options);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
 }

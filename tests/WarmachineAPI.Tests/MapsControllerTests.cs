@@ -49,4 +49,22 @@ public class MapsControllerTests : IClassFixture<WarmachineApiFactory>
         var getResponse = await _client.GetAsync($"/api/maps/{created.Id}");
         Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
     }
+
+    [Fact]
+    public async Task Create_WithZeroWidth_ReturnsBadRequest()
+    {
+        var map = new Map { Name = "Invalid Board", Width = 0, Height = 1219.2 };
+
+        var response = await _client.PostAsJsonAsync("/api/maps", map, TestJson.Options);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Create_WithEmptyName_ReturnsBadRequest()
+    {
+        var map = new Map { Name = "", Width = 1219.2, Height = 1219.2 };
+
+        var response = await _client.PostAsJsonAsync("/api/maps", map, TestJson.Options);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
 }

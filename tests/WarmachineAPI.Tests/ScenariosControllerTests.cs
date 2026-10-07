@@ -40,4 +40,11 @@ public class ScenariosControllerTests : IClassFixture<WarmachineApiFactory>
         var getResponse = await _client.GetAsync($"/api/scenarios/{created.Id}");
         Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
     }
+
+    [Fact]
+    public async Task Create_WithEmptyName_ReturnsBadRequest()
+    {
+        var response = await _client.PostAsJsonAsync("/api/scenarios", new Scenario { Name = "" }, TestJson.Options);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
 }

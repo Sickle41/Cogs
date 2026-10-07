@@ -99,4 +99,14 @@ public class TerrainControllerTests : IClassFixture<WarmachineApiFactory>
         Assert.All(list!, t => Assert.Equal(mapA.Id, t.MapId));
         Assert.Contains(list!, t => t.Id == createdA!.Id);
     }
+
+    [Fact]
+    public async Task Create_WithEmptyName_ReturnsBadRequest()
+    {
+        var map = await CreateMapAsync("Validation Test Board");
+        var terrain = new TerrainFeature { Name = "", TerrainType = TerrainType.Forest, Shape = TerrainShape.Circle, Radius = 100 };
+
+        var response = await _client.PostAsJsonAsync($"/api/maps/{map.Id}/terrain", terrain, TestJson.Options);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
 }

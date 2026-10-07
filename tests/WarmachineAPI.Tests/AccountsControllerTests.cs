@@ -40,4 +40,11 @@ public class AccountsControllerTests : IClassFixture<WarmachineApiFactory>
         var getResponse = await _client.GetAsync($"/api/accounts/{created.Id}");
         Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
     }
+
+    [Fact]
+    public async Task Create_WithEmptyDisplayName_ReturnsBadRequest()
+    {
+        var response = await _client.PostAsJsonAsync("/api/accounts", new Account { DisplayName = "" }, TestJson.Options);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
 }
