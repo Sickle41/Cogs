@@ -18,7 +18,10 @@ public class UnitDefinitionsController : ControllerBase
     }
 
     [HttpGet]
-    public ActionResult<IEnumerable<UnitDefinition>> GetAll([FromQuery] Guid? factionId)
+    public ActionResult<PagedResult<UnitDefinition>> GetAll(
+        [FromQuery] Guid? factionId,
+        [FromQuery] int? page,
+        [FromQuery] int? pageSize)
     {
         var units = _units.GetAll();
         if (factionId.HasValue)
@@ -26,7 +29,7 @@ public class UnitDefinitionsController : ControllerBase
             units = units.Where(u => u.FactionId == factionId.Value);
         }
 
-        return Ok(units);
+        return Ok(PagedResult<UnitDefinition>.Create(units, page, pageSize));
     }
 
     [HttpGet("{id:guid}")]

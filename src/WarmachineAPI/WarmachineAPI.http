@@ -5,6 +5,11 @@ Accept: application/json
 
 ###
 
+GET {{WarmachineAPI_HostAddress}}/api/factions?page=1&pageSize=10
+Accept: application/json
+
+###
+
 POST {{WarmachineAPI_HostAddress}}/api/factions
 Content-Type: application/json
 

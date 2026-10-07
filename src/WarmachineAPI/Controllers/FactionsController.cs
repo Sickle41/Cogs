@@ -16,9 +16,9 @@ public class FactionsController : ControllerBase
     }
 
     [HttpGet]
-    public ActionResult<IEnumerable<Faction>> GetAll()
+    public ActionResult<PagedResult<Faction>> GetAll([FromQuery] int? page, [FromQuery] int? pageSize)
     {
-        return Ok(_factions.GetAll());
+        return Ok(PagedResult<Faction>.Create(_factions.GetAll(), page, pageSize));
     }
 
     [HttpGet("{id:guid}")]

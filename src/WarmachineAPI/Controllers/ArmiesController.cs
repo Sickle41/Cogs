@@ -37,9 +37,9 @@ public class ArmiesController : ControllerBase
     }
 
     [HttpGet]
-    public ActionResult<IEnumerable<Army>> GetAll()
+    public ActionResult<PagedResult<Army>> GetAll([FromQuery] int? page, [FromQuery] int? pageSize)
     {
-        return Ok(_armies.GetAll());
+        return Ok(PagedResult<Army>.Create(_armies.GetAll(), page, pageSize));
     }
 
     [HttpGet("{id:guid}")]
