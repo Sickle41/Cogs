@@ -341,3 +341,8 @@ Content-Type: application/json
 }
 
 ###
+
+GET {{WarmachineAPI_HostAddress}}/api/sessions/00000000-0000-0000-0000-000000000000/summary
+Accept: application/json
+
+###
