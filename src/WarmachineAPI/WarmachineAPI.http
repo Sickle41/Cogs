@@ -143,6 +143,24 @@ Content-Type: application/json
 
 ###
 
+@# Response from POST /api/accounts includes an "apiKey" - use it below to update/delete that account.
+
+PUT {{WarmachineAPI_HostAddress}}/api/accounts/00000000-0000-0000-0000-000000000000
+Content-Type: application/json
+X-Api-Key: PASTE_YOUR_API_KEY_HERE
+
+{
+  "displayName": "Sickle41 Updated",
+  "email": "sickle41@example.com"
+}
+
+###
+
+DELETE {{WarmachineAPI_HostAddress}}/api/accounts/00000000-0000-0000-0000-000000000000
+X-Api-Key: PASTE_YOUR_API_KEY_HERE
+
+###
+
 GET {{WarmachineAPI_HostAddress}}/api/armies
 Accept: application/json
 
