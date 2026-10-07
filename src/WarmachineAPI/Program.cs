@@ -37,6 +37,12 @@ builder.Services.AddScoped<IRepository<Account>, EfRepository<Account>>();
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<WarmachineDbContext>();
 
+const string CorsPolicyName = "Default";
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+builder.Services.AddCors(options =>
+    options.AddPolicy(CorsPolicyName, policy =>
+        policy.WithOrigins(allowedOrigins).AllowAnyHeader().AllowAnyMethod()));
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -59,6 +65,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors(CorsPolicyName);
 
 app.UseAuthorization();
 
