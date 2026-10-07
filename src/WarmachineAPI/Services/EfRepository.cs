@@ -22,6 +22,14 @@ public class EfRepository<T> : IRepository<T> where T : class, IEntity
     public T Create(T entity)
     {
         entity.Id = Guid.NewGuid();
+
+        if (entity is IAuditable auditable)
+        {
+            var now = DateTime.UtcNow;
+            auditable.CreatedAt = now;
+            auditable.UpdatedAt = now;
+        }
+
         _set.Add(entity);
         _context.SaveChanges();
         return entity;
@@ -36,6 +44,13 @@ public class EfRepository<T> : IRepository<T> where T : class, IEntity
         }
 
         entity.Id = id;
+
+        if (entity is IAuditable incomingAuditable && existing is IAuditable existingAuditable)
+        {
+            incomingAuditable.CreatedAt = existingAuditable.CreatedAt;
+            incomingAuditable.UpdatedAt = DateTime.UtcNow;
+        }
+
         _context.Entry(existing).CurrentValues.SetValues(entity);
         _context.SaveChanges();
         return true;

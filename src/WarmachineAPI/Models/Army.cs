@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace WarmachineAPI.Models;
 
-public class Army : IEntity
+public class Army : IEntity, IAuditable
 {
     public Guid Id { get; set; }
 
@@ -15,4 +15,7 @@ public class Army : IEntity
     public int PointLimit { get; set; }
 
     public Guid? OwnerAccountId { get; set; }
+
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 }

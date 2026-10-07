@@ -207,4 +207,25 @@ public class ModelInstancesControllerTests : IClassFixture<WarmachineApiFactory>
         var getResponse = await _client.GetAsync($"/api/models/{created.Id}");
         Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
     }
+
+    [Fact]
+    public async Task UpdatePosition_PreservesCreatedAt_ButAdvancesUpdatedAt()
+    {
+        var map = await CreateMapAsync("Model Audit Board");
+        var session = await CreateSessionAsync(map.Id);
+        var entry = await CreateFullChainArmyEntryAsync("Audit");
+
+        var createResponse = await _client.PostAsJsonAsync($"/api/sessions/{session.Id}/models", new ModelInstance { ArmyEntryId = entry.Id, X = 0, Y = 0 }, TestJson.Options);
+        var created = await createResponse.Content.ReadFromJsonAsync<ModelInstance>(TestJson.Options);
+
+        await Task.Delay(50);
+
+        await _client.PatchAsJsonAsync($"/api/models/{created!.Id}/position", new PositionUpdate { X = 10, Y = 10, Facing = 0 }, TestJson.Options);
+
+        var getResponse = await _client.GetAsync($"/api/models/{created.Id}");
+        var fetched = await getResponse.Content.ReadFromJsonAsync<ModelInstance>(TestJson.Options);
+
+        Assert.Equal(created.CreatedAt, fetched!.CreatedAt);
+        Assert.True(fetched.UpdatedAt > fetched.CreatedAt);
+    }
 }
