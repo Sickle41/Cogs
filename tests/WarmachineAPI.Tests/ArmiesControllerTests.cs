@@ -212,6 +212,40 @@ public class ArmiesControllerTests : IClassFixture<WarmachineApiFactory>
     }
 
     [Fact]
+    public async Task Update_WithCurrentToken_SucceedsAndBumpsToken()
+    {
+        var faction = await CreateFactionAsync("Cygnar-Concurrency-Ok");
+        var createResponse = await _client.PostAsJsonAsync("/api/armies", new Army { Name = "Concurrency Army", FactionId = faction.Id, PointLimit = 50 }, TestJson.Options);
+        var created = await createResponse.Content.ReadFromJsonAsync<Army>(TestJson.Options);
+        Assert.NotEqual(Guid.Empty, created!.ConcurrencyToken);
+
+        created.Name = "Concurrency Army Updated";
+        var updateResponse = await _client.PutAsJsonAsync($"/api/armies/{created.Id}", created, TestJson.Options);
+        Assert.Equal(HttpStatusCode.NoContent, updateResponse.StatusCode);
+
+        var fetched = await (await _client.GetAsync($"/api/armies/{created.Id}")).Content.ReadFromJsonAsync<Army>(TestJson.Options);
+        Assert.NotEqual(created.ConcurrencyToken, fetched!.ConcurrencyToken);
+    }
+
+    [Fact]
+    public async Task Update_WithStaleToken_ReturnsConflict()
+    {
+        var faction = await CreateFactionAsync("Cygnar-Concurrency-Conflict");
+        var createResponse = await _client.PostAsJsonAsync("/api/armies", new Army { Name = "Stale Token Army", FactionId = faction.Id, PointLimit = 50 }, TestJson.Options);
+        var created = await createResponse.Content.ReadFromJsonAsync<Army>(TestJson.Options);
+
+        // First client's update succeeds and bumps the token.
+        var firstEdit = new Army { Id = created!.Id, Name = "First Editor", FactionId = faction.Id, PointLimit = 50, ConcurrencyToken = created.ConcurrencyToken };
+        await _client.PutAsJsonAsync($"/api/armies/{created.Id}", firstEdit, TestJson.Options);
+
+        // Second client still has the original (now stale) token.
+        var secondEdit = new Army { Id = created.Id, Name = "Second Editor", FactionId = faction.Id, PointLimit = 50, ConcurrencyToken = created.ConcurrencyToken };
+        var conflictResponse = await _client.PutAsJsonAsync($"/api/armies/{created.Id}", secondEdit, TestJson.Options);
+
+        Assert.Equal(HttpStatusCode.Conflict, conflictResponse.StatusCode);
+    }
+
+    [Fact]
     public async Task Delete_WithDependentEntry_ReturnsConflict()
     {
         var faction = await CreateFactionAsync("Cygnar-Delete-Protected-Army");

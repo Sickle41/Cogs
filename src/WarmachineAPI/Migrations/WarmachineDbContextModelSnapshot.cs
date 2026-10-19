@@ -69,6 +69,9 @@ namespace WarmachineAPI.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid>("ConcurrencyToken")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
@@ -283,6 +286,9 @@ namespace WarmachineAPI.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("ActiveParticipantId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ConcurrencyToken")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")

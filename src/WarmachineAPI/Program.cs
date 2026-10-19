@@ -12,6 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers()
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
+builder.Services.AddExceptionHandler<ConcurrencyExceptionHandler>();
 builder.Services.AddProblemDetails();
 
 builder.Services.AddDbContext<WarmachineDbContext>(options =>

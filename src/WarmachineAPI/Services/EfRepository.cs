@@ -30,6 +30,11 @@ public class EfRepository<T> : IRepository<T> where T : class, IEntity
             auditable.UpdatedAt = now;
         }
 
+        if (entity is IConcurrent newConcurrent)
+        {
+            newConcurrent.ConcurrencyToken = Guid.NewGuid();
+        }
+
         _set.Add(entity);
         _context.SaveChanges();
         return entity;
@@ -49,6 +54,17 @@ public class EfRepository<T> : IRepository<T> where T : class, IEntity
         {
             incomingAuditable.CreatedAt = existingAuditable.CreatedAt;
             incomingAuditable.UpdatedAt = DateTime.UtcNow;
+        }
+
+        if (entity is IConcurrent incomingConcurrent && existing is IConcurrent existingConcurrent)
+        {
+            if (incomingConcurrent.ConcurrencyToken != existingConcurrent.ConcurrencyToken)
+            {
+                throw new ConcurrencyConflictException(
+                    $"{typeof(T).Name} '{id}' was modified by another request. Re-fetch and try again.");
+            }
+
+            incomingConcurrent.ConcurrencyToken = Guid.NewGuid();
         }
 
         _context.Entry(existing).CurrentValues.SetValues(entity);
