@@ -10,11 +10,28 @@ public class UnitDefinitionsController : ControllerBase
 {
     private readonly IRepository<UnitDefinition> _units;
     private readonly IRepository<Faction> _factions;
+    private readonly IRepository<ArmyEntry> _armyEntries;
+    private readonly IRepository<Spell> _spells;
+    private readonly IRepository<Ability> _abilities;
+    private readonly IRepository<UnitAttachment> _attachments;
+    private readonly IRepository<Feat> _feats;
 
-    public UnitDefinitionsController(IRepository<UnitDefinition> units, IRepository<Faction> factions)
+    public UnitDefinitionsController(
+        IRepository<UnitDefinition> units,
+        IRepository<Faction> factions,
+        IRepository<ArmyEntry> armyEntries,
+        IRepository<Spell> spells,
+        IRepository<Ability> abilities,
+        IRepository<UnitAttachment> attachments,
+        IRepository<Feat> feats)
     {
         _units = units;
         _factions = factions;
+        _armyEntries = armyEntries;
+        _spells = spells;
+        _abilities = abilities;
+        _attachments = attachments;
+        _feats = feats;
     }
 
     [HttpGet]
@@ -65,6 +82,31 @@ public class UnitDefinitionsController : ControllerBase
     [HttpDelete("{id:guid}")]
     public IActionResult Delete(Guid id)
     {
+        if (_armyEntries.GetAll().Any(e => e.UnitDefinitionId == id))
+        {
+            return this.ProblemConflict($"Unit '{id}' still has army entries referencing it.");
+        }
+
+        if (_spells.GetAll().Any(s => s.UnitDefinitionId == id))
+        {
+            return this.ProblemConflict($"Unit '{id}' still has spells referencing it.");
+        }
+
+        if (_abilities.GetAll().Any(a => a.UnitDefinitionId == id))
+        {
+            return this.ProblemConflict($"Unit '{id}' still has abilities referencing it.");
+        }
+
+        if (_attachments.GetAll().Any(a => a.UnitDefinitionId == id))
+        {
+            return this.ProblemConflict($"Unit '{id}' still has unit attachments referencing it.");
+        }
+
+        if (_feats.GetAll().Any(f => f.UnitDefinitionId == id))
+        {
+            return this.ProblemConflict($"Unit '{id}' still has feats referencing it.");
+        }
+
         return _units.Delete(id) ? NoContent() : NotFound();
     }
 }

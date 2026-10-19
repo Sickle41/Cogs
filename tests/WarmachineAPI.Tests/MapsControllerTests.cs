@@ -67,4 +67,17 @@ public class MapsControllerTests : IClassFixture<WarmachineApiFactory>
         var response = await _client.PostAsJsonAsync("/api/maps", map, TestJson.Options);
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Delete_WithDependentTerrain_ReturnsConflict()
+    {
+        var createResponse = await _client.PostAsJsonAsync("/api/maps", new Map { Name = "Delete Protected Board" }, TestJson.Options);
+        var map = await createResponse.Content.ReadFromJsonAsync<Map>(TestJson.Options);
+
+        var terrain = new TerrainFeature { Name = "Blocking Forest", TerrainType = TerrainType.Forest, Shape = TerrainShape.Circle, Radius = 50 };
+        await _client.PostAsJsonAsync($"/api/maps/{map!.Id}/terrain", terrain, TestJson.Options);
+
+        var deleteResponse = await _client.DeleteAsync($"/api/maps/{map.Id}");
+        Assert.Equal(HttpStatusCode.Conflict, deleteResponse.StatusCode);
+    }
 }

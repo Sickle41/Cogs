@@ -9,10 +9,17 @@ namespace WarmachineAPI.Controllers;
 public class ScenariosController : ControllerBase
 {
     private readonly IRepository<Scenario> _scenarios;
+    private readonly IRepository<ControlZone> _controlZones;
+    private readonly IRepository<GameSession> _sessions;
 
-    public ScenariosController(IRepository<Scenario> scenarios)
+    public ScenariosController(
+        IRepository<Scenario> scenarios,
+        IRepository<ControlZone> controlZones,
+        IRepository<GameSession> sessions)
     {
         _scenarios = scenarios;
+        _controlZones = controlZones;
+        _sessions = sessions;
     }
 
     [HttpGet]
@@ -44,6 +51,16 @@ public class ScenariosController : ControllerBase
     [HttpDelete("{id:guid}")]
     public IActionResult Delete(Guid id)
     {
+        if (_controlZones.GetAll().Any(z => z.ScenarioId == id))
+        {
+            return this.ProblemConflict($"Scenario '{id}' still has control zones referencing it.");
+        }
+
+        if (_sessions.GetAll().Any(s => s.ScenarioId == id))
+        {
+            return this.ProblemConflict($"Scenario '{id}' still has game sessions referencing it.");
+        }
+
         return _scenarios.Delete(id) ? NoContent() : NotFound();
     }
 }

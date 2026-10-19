@@ -21,19 +21,22 @@ public class ArmiesController : ControllerBase
     private readonly IRepository<ArmyEntry> _armyEntries;
     private readonly IRepository<UnitDefinition> _units;
     private readonly IRepository<Account> _accounts;
+    private readonly IRepository<GameParticipant> _participants;
 
     public ArmiesController(
         IRepository<Army> armies,
         IRepository<Faction> factions,
         IRepository<ArmyEntry> armyEntries,
         IRepository<UnitDefinition> units,
-        IRepository<Account> accounts)
+        IRepository<Account> accounts,
+        IRepository<GameParticipant> participants)
     {
         _armies = armies;
         _factions = factions;
         _armyEntries = armyEntries;
         _units = units;
         _accounts = accounts;
+        _participants = participants;
     }
 
     [HttpGet]
@@ -107,6 +110,16 @@ public class ArmiesController : ControllerBase
     [HttpDelete("{id:guid}")]
     public IActionResult Delete(Guid id)
     {
+        if (_armyEntries.GetAll().Any(e => e.ArmyId == id))
+        {
+            return this.ProblemConflict($"Army '{id}' still has entries referencing it.");
+        }
+
+        if (_participants.GetAll().Any(p => p.ArmyId == id))
+        {
+            return this.ProblemConflict($"Army '{id}' still has game participants referencing it.");
+        }
+
         return _armies.Delete(id) ? NoContent() : NotFound();
     }
 }
