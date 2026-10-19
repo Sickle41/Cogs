@@ -9,10 +9,17 @@ namespace WarmachineAPI.Controllers;
 public class FactionsController : ControllerBase
 {
     private readonly IRepository<Faction> _factions;
+    private readonly IRepository<UnitDefinition> _units;
+    private readonly IRepository<Army> _armies;
 
-    public FactionsController(IRepository<Faction> factions)
+    public FactionsController(
+        IRepository<Faction> factions,
+        IRepository<UnitDefinition> units,
+        IRepository<Army> armies)
     {
         _factions = factions;
+        _units = units;
+        _armies = armies;
     }
 
     [HttpGet]
@@ -44,6 +51,16 @@ public class FactionsController : ControllerBase
     [HttpDelete("{id:guid}")]
     public IActionResult Delete(Guid id)
     {
+        if (_units.GetAll().Any(u => u.FactionId == id))
+        {
+            return this.ProblemConflict($"Faction '{id}' still has unit definitions referencing it.");
+        }
+
+        if (_armies.GetAll().Any(a => a.FactionId == id))
+        {
+            return this.ProblemConflict($"Faction '{id}' still has armies referencing it.");
+        }
+
         return _factions.Delete(id) ? NoContent() : NotFound();
     }
 }

@@ -126,4 +126,17 @@ public class UnitDefinitionsControllerTests : IClassFixture<WarmachineApiFactory
         var response = await _client.PostAsJsonAsync("/api/units", unit, TestJson.Options);
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Delete_WithDependentAbility_ReturnsConflict()
+    {
+        var faction = await CreateFactionAsync("Cygnar-Delete-Protected-Unit");
+        var createResponse = await _client.PostAsJsonAsync("/api/units", BuildUnit(faction.Id, "Delete Protected Unit"), TestJson.Options);
+        var unit = await createResponse.Content.ReadFromJsonAsync<UnitDefinition>(TestJson.Options);
+
+        await _client.PostAsJsonAsync($"/api/units/{unit!.Id}/abilities", new Ability { Name = "Pathfinder" }, TestJson.Options);
+
+        var deleteResponse = await _client.DeleteAsync($"/api/units/{unit.Id}");
+        Assert.Equal(HttpStatusCode.Conflict, deleteResponse.StatusCode);
+    }
 }

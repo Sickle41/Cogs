@@ -143,4 +143,17 @@ public class FactionsControllerTests : IClassFixture<WarmachineApiFactory>
 
         Assert.Equal(200, page!.PageSize);
     }
+
+    [Fact]
+    public async Task Delete_WithDependentUnit_ReturnsConflict()
+    {
+        var createResponse = await _client.PostAsJsonAsync("/api/factions", new Faction { Name = "Cygnar-Delete-Protected" }, TestJson.Options);
+        var faction = await createResponse.Content.ReadFromJsonAsync<Faction>(TestJson.Options);
+
+        var unit = new UnitDefinition { FactionId = faction!.Id, Name = "Stormblade", Category = UnitCategory.Unit, PointCost = 3 };
+        await _client.PostAsJsonAsync("/api/units", unit, TestJson.Options);
+
+        var deleteResponse = await _client.DeleteAsync($"/api/factions/{faction.Id}");
+        Assert.Equal(HttpStatusCode.Conflict, deleteResponse.StatusCode);
+    }
 }

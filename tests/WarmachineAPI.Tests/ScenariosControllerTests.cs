@@ -47,4 +47,16 @@ public class ScenariosControllerTests : IClassFixture<WarmachineApiFactory>
         var response = await _client.PostAsJsonAsync("/api/scenarios", new Scenario { Name = "" }, TestJson.Options);
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Delete_WithDependentControlZone_ReturnsConflict()
+    {
+        var createResponse = await _client.PostAsJsonAsync("/api/scenarios", new Scenario { Name = "Delete Protected Scenario" }, TestJson.Options);
+        var scenario = await createResponse.Content.ReadFromJsonAsync<Scenario>(TestJson.Options);
+
+        await _client.PostAsJsonAsync($"/api/scenarios/{scenario!.Id}/zones", new ControlZone { Name = "Center Flag", Radius = 40 }, TestJson.Options);
+
+        var deleteResponse = await _client.DeleteAsync($"/api/scenarios/{scenario.Id}");
+        Assert.Equal(HttpStatusCode.Conflict, deleteResponse.StatusCode);
+    }
 }

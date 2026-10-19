@@ -210,4 +210,18 @@ public class ArmiesControllerTests : IClassFixture<WarmachineApiFactory>
         Assert.Equal(created.CreatedAt, fetched!.CreatedAt);
         Assert.True(fetched.UpdatedAt > fetched.CreatedAt);
     }
+
+    [Fact]
+    public async Task Delete_WithDependentEntry_ReturnsConflict()
+    {
+        var faction = await CreateFactionAsync("Cygnar-Delete-Protected-Army");
+        var createResponse = await _client.PostAsJsonAsync("/api/armies", new Army { Name = "Delete Protected Army", FactionId = faction.Id, PointLimit = 50 }, TestJson.Options);
+        var army = await createResponse.Content.ReadFromJsonAsync<Army>(TestJson.Options);
+
+        var unit = await CreateUnitAsync(faction.Id, "Stormblade", 3);
+        await AddArmyEntryAsync(army!.Id, unit.Id, 6);
+
+        var deleteResponse = await _client.DeleteAsync($"/api/armies/{army.Id}");
+        Assert.Equal(HttpStatusCode.Conflict, deleteResponse.StatusCode);
+    }
 }

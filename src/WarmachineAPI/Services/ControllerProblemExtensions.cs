@@ -9,4 +9,7 @@ public static class ControllerProblemExtensions
 
     public static ObjectResult ProblemNotFound(this ControllerBase controller, string detail) =>
         controller.Problem(detail: detail, statusCode: StatusCodes.Status404NotFound);
+
+    public static ObjectResult ProblemConflict(this ControllerBase controller, string detail) =>
+        controller.Problem(detail: detail, statusCode: StatusCodes.Status409Conflict);
 }
