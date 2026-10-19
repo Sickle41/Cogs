@@ -23,9 +23,18 @@ public class FactionsController : ControllerBase
     }
 
     [HttpGet]
-    public ActionResult<PagedResult<Faction>> GetAll([FromQuery] int? page, [FromQuery] int? pageSize)
+    public ActionResult<PagedResult<Faction>> GetAll(
+        [FromQuery] string? search,
+        [FromQuery] int? page,
+        [FromQuery] int? pageSize)
     {
-        return Ok(PagedResult<Faction>.Create(_factions.GetAll(), page, pageSize));
+        var factions = _factions.GetAll();
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            factions = factions.Where(f => f.Name.Contains(search, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return Ok(PagedResult<Faction>.Create(factions, page, pageSize));
     }
 
     [HttpGet("{id:guid}")]

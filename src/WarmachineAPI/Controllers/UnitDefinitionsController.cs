@@ -37,6 +37,7 @@ public class UnitDefinitionsController : ControllerBase
     [HttpGet]
     public ActionResult<PagedResult<UnitDefinition>> GetAll(
         [FromQuery] Guid? factionId,
+        [FromQuery] string? search,
         [FromQuery] int? page,
         [FromQuery] int? pageSize)
     {
@@ -44,6 +45,11 @@ public class UnitDefinitionsController : ControllerBase
         if (factionId.HasValue)
         {
             units = units.Where(u => u.FactionId == factionId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            units = units.Where(u => u.Name.Contains(search, StringComparison.OrdinalIgnoreCase));
         }
 
         return Ok(PagedResult<UnitDefinition>.Create(units, page, pageSize));
