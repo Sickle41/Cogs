@@ -20,9 +20,9 @@ public class ArmiesControllerTests : IClassFixture<WarmachineApiFactory>
         return (await response.Content.ReadFromJsonAsync<Faction>(TestJson.Options))!;
     }
 
-    private async Task<UnitDefinition> CreateUnitAsync(Guid factionId, string name, int pointCost)
+    private async Task<UnitDefinition> CreateUnitAsync(Guid factionId, string name, int pointCost, UnitCategory category = UnitCategory.Unit)
     {
-        var unit = new UnitDefinition { FactionId = factionId, Name = name, Category = UnitCategory.Unit, PointCost = pointCost };
+        var unit = new UnitDefinition { FactionId = factionId, Name = name, Category = category, PointCost = pointCost };
         var response = await _client.PostAsJsonAsync("/api/units", unit, TestJson.Options);
         return (await response.Content.ReadFromJsonAsync<UnitDefinition>(TestJson.Options))!;
     }
@@ -30,6 +30,12 @@ public class ArmiesControllerTests : IClassFixture<WarmachineApiFactory>
     private async Task AddArmyEntryAsync(Guid armyId, Guid unitId, int quantity)
     {
         await _client.PostAsJsonAsync($"/api/armies/{armyId}/entries", new ArmyEntry { UnitDefinitionId = unitId, Quantity = quantity }, TestJson.Options);
+    }
+
+    private async Task<ArmyEntry> CreateArmyEntryAsync(Guid armyId, ArmyEntry entry)
+    {
+        var response = await _client.PostAsJsonAsync($"/api/armies/{armyId}/entries", entry, TestJson.Options);
+        return (await response.Content.ReadFromJsonAsync<ArmyEntry>(TestJson.Options))!;
     }
 
     [Fact]
@@ -257,5 +263,64 @@ public class ArmiesControllerTests : IClassFixture<WarmachineApiFactory>
 
         var deleteResponse = await _client.DeleteAsync($"/api/armies/{army.Id}");
         Assert.Equal(HttpStatusCode.Conflict, deleteResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetExport_NonExistentArmy_ReturnsNotFound()
+    {
+        var response = await _client.GetAsync($"/api/armies/{Guid.NewGuid()}/export");
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetExport_WithNoEntries_ReturnsEmptyListAndZeroTotal()
+    {
+        var faction = await CreateFactionAsync("Cygnar-Export-Empty");
+        var createResponse = await _client.PostAsJsonAsync("/api/armies", new Army { Name = "Empty Export List", FactionId = faction.Id, PointLimit = 50 }, TestJson.Options);
+        var army = await createResponse.Content.ReadFromJsonAsync<Army>(TestJson.Options);
+
+        var response = await _client.GetAsync($"/api/armies/{army!.Id}/export");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var export = await response.Content.ReadFromJsonAsync<ArmyExport>(TestJson.Options);
+        Assert.Equal("Empty Export List", export!.ArmyName);
+        Assert.Equal("Cygnar-Export-Empty", export.FactionName);
+        Assert.Empty(export.Entries);
+        Assert.Equal(0, export.TotalPoints);
+    }
+
+    [Fact]
+    public async Task GetExport_ComposesEntriesWithAttachmentAndBattlegroupCaster()
+    {
+        var faction = await CreateFactionAsync("Cygnar-Export-Full");
+        var createResponse = await _client.PostAsJsonAsync("/api/armies", new Army { Name = "Full Export List", FactionId = faction.Id, PointLimit = 50 }, TestJson.Options);
+        var army = await createResponse.Content.ReadFromJsonAsync<Army>(TestJson.Options);
+
+        var caster = await CreateUnitAsync(faction.Id, "Commander Stryker", 0, UnitCategory.Warcaster);
+        var jack = await CreateUnitAsync(faction.Id, "Ironclad", 8, UnitCategory.Warjack);
+        var unit = await CreateUnitAsync(faction.Id, "Stormblade", 3);
+
+        var attachmentResponse = await _client.PostAsJsonAsync($"/api/units/{unit.Id}/attachments", new UnitAttachment { Name = "Rocket Pack", PointCost = 1 }, TestJson.Options);
+        var attachment = await attachmentResponse.Content.ReadFromJsonAsync<UnitAttachment>(TestJson.Options);
+
+        var casterEntry = await CreateArmyEntryAsync(army!.Id, new ArmyEntry { UnitDefinitionId = caster.Id, Quantity = 1 });
+        await CreateArmyEntryAsync(army.Id, new ArmyEntry { UnitDefinitionId = jack.Id, Quantity = 1, BattlegroupCasterEntryId = casterEntry.Id });
+        await CreateArmyEntryAsync(army.Id, new ArmyEntry { UnitDefinitionId = unit.Id, Quantity = 6, UnitAttachmentId = attachment!.Id });
+
+        var response = await _client.GetAsync($"/api/armies/{army.Id}/export");
+        var export = await response.Content.ReadFromJsonAsync<ArmyExport>(TestJson.Options);
+
+        Assert.Equal(3, export!.Entries.Count);
+        Assert.Equal(0 + 8 + 3 * 6, export.TotalPoints);
+
+        var jackEntry = export.Entries.Single(e => e.UnitName == "Ironclad");
+        Assert.Equal(UnitCategory.Warjack, jackEntry.Category);
+        Assert.Equal("Commander Stryker", jackEntry.BattlegroupCasterName);
+        Assert.Null(jackEntry.AttachmentName);
+
+        var stormbladeEntry = export.Entries.Single(e => e.UnitName == "Stormblade");
+        Assert.Equal(6, stormbladeEntry.Quantity);
+        Assert.Equal("Rocket Pack", stormbladeEntry.AttachmentName);
+        Assert.Null(stormbladeEntry.BattlegroupCasterName);
     }
 }
