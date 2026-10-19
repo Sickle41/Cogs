@@ -12,6 +12,25 @@ public class ArmyPointsSummary
     public bool IsOverLimit { get; set; }
 }
 
+public class ArmyExportEntry
+{
+    public string UnitName { get; set; } = string.Empty;
+    public UnitCategory Category { get; set; }
+    public int PointCost { get; set; }
+    public int Quantity { get; set; }
+    public string? AttachmentName { get; set; }
+    public string? BattlegroupCasterName { get; set; }
+}
+
+public class ArmyExport
+{
+    public string ArmyName { get; set; } = string.Empty;
+    public string FactionName { get; set; } = string.Empty;
+    public int PointLimit { get; set; }
+    public int TotalPoints { get; set; }
+    public List<ArmyExportEntry> Entries { get; set; } = new();
+}
+
 [ApiController]
 [Route("api/[controller]")]
 public class ArmiesController : ControllerBase
@@ -22,6 +41,7 @@ public class ArmiesController : ControllerBase
     private readonly IRepository<UnitDefinition> _units;
     private readonly IRepository<Account> _accounts;
     private readonly IRepository<GameParticipant> _participants;
+    private readonly IRepository<UnitAttachment> _attachments;
 
     public ArmiesController(
         IRepository<Army> armies,
@@ -29,7 +49,8 @@ public class ArmiesController : ControllerBase
         IRepository<ArmyEntry> armyEntries,
         IRepository<UnitDefinition> units,
         IRepository<Account> accounts,
-        IRepository<GameParticipant> participants)
+        IRepository<GameParticipant> participants,
+        IRepository<UnitAttachment> attachments)
     {
         _armies = armies;
         _factions = factions;
@@ -37,6 +58,7 @@ public class ArmiesController : ControllerBase
         _units = units;
         _accounts = accounts;
         _participants = participants;
+        _attachments = attachments;
     }
 
     [HttpGet]
@@ -71,6 +93,48 @@ public class ArmiesController : ControllerBase
             PointLimit = army.PointLimit,
             RemainingPoints = army.PointLimit - totalPoints,
             IsOverLimit = totalPoints > army.PointLimit
+        });
+    }
+
+    [HttpGet("{id:guid}/export")]
+    public ActionResult<ArmyExport> GetExport(Guid id)
+    {
+        var army = _armies.GetById(id);
+        if (army is null)
+        {
+            return NotFound();
+        }
+
+        var faction = _factions.GetById(army.FactionId);
+        var entries = _armyEntries.GetAll().Where(e => e.ArmyId == id).ToList();
+
+        var exportEntries = entries.Select(e =>
+        {
+            var unit = _units.GetById(e.UnitDefinitionId);
+            var attachment = e.UnitAttachmentId.HasValue ? _attachments.GetById(e.UnitAttachmentId.Value) : null;
+            var casterEntry = e.BattlegroupCasterEntryId.HasValue
+                ? entries.FirstOrDefault(x => x.Id == e.BattlegroupCasterEntryId.Value)
+                : null;
+            var casterUnit = casterEntry is not null ? _units.GetById(casterEntry.UnitDefinitionId) : null;
+
+            return new ArmyExportEntry
+            {
+                UnitName = unit?.Name ?? "Unknown",
+                Category = unit?.Category ?? default,
+                PointCost = unit?.PointCost ?? 0,
+                Quantity = e.Quantity,
+                AttachmentName = attachment?.Name,
+                BattlegroupCasterName = casterUnit?.Name
+            };
+        }).ToList();
+
+        return Ok(new ArmyExport
+        {
+            ArmyName = army.Name,
+            FactionName = faction?.Name ?? "Unknown",
+            PointLimit = army.PointLimit,
+            TotalPoints = exportEntries.Sum(e => e.PointCost * e.Quantity),
+            Entries = exportEntries
         });
     }
 

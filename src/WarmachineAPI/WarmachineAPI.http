@@ -231,6 +231,11 @@ Accept: application/json
 
 ###
 
+GET {{WarmachineAPI_HostAddress}}/api/armies/00000000-0000-0000-0000-000000000000/export
+Accept: application/json
+
+###
+
 GET {{WarmachineAPI_HostAddress}}/api/scenarios
 Accept: application/json
 
