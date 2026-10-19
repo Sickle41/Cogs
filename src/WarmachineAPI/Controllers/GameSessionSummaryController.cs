@@ -11,6 +11,7 @@ public class GameSessionParticipantSummary
     public int ModelCount { get; set; }
     public int ModelsDestroyed { get; set; }
     public int TotalDamageTaken { get; set; }
+    public int VictoryPoints { get; set; }
 }
 
 public class GameSessionSummary
@@ -84,7 +85,8 @@ public class GameSessionSummaryController : ControllerBase
                     ArmyName = army?.Name ?? "Unknown",
                     ModelCount = modelsForArmy.Count,
                     ModelsDestroyed = modelsForArmy.Count(m => m.IsDestroyed),
-                    TotalDamageTaken = modelsForArmy.Sum(m => m.DamageTaken)
+                    TotalDamageTaken = modelsForArmy.Sum(m => m.DamageTaken),
+                    VictoryPoints = p.VictoryPoints
                 };
             })
             .ToList();

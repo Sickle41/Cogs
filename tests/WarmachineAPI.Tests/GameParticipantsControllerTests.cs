@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using WarmachineAPI.Controllers;
 using WarmachineAPI.Models;
 
 namespace WarmachineAPI.Tests;
@@ -82,5 +83,31 @@ public class GameParticipantsControllerTests : IClassFixture<WarmachineApiFactor
 
         var getResponse = await _client.GetAsync($"/api/participants/{created.Id}");
         Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task AddScore_IncrementsVictoryPoints()
+    {
+        var map = await CreateMapAsync("Participant Score Board");
+        var session = await CreateSessionAsync(map.Id);
+        var faction = await CreateFactionAsync("Cygnar-Score");
+        var army = await CreateArmyAsync(faction.Id, "Stryker's Scoring Command");
+
+        var createResponse = await _client.PostAsJsonAsync($"/api/sessions/{session.Id}/participants", new GameParticipant { ArmyId = army.Id, TurnOrder = 1 }, TestJson.Options);
+        var created = await createResponse.Content.ReadFromJsonAsync<GameParticipant>(TestJson.Options);
+        Assert.Equal(0, created!.VictoryPoints);
+
+        await _client.PostAsJsonAsync($"/api/participants/{created.Id}/score", new ScoreUpdate { Points = 2 }, TestJson.Options);
+        await _client.PostAsJsonAsync($"/api/participants/{created.Id}/score", new ScoreUpdate { Points = 3 }, TestJson.Options);
+
+        var fetched = await (await _client.GetAsync($"/api/participants/{created.Id}")).Content.ReadFromJsonAsync<GameParticipant>(TestJson.Options);
+        Assert.Equal(5, fetched!.VictoryPoints);
+    }
+
+    [Fact]
+    public async Task AddScore_NonExistentParticipant_ReturnsNotFound()
+    {
+        var response = await _client.PostAsJsonAsync($"/api/participants/{Guid.NewGuid()}/score", new ScoreUpdate { Points = 1 }, TestJson.Options);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 }

@@ -154,4 +154,25 @@ public class GameSessionSummaryControllerTests : IClassFixture<WarmachineApiFact
         Assert.Equal(1, summary!.LogEntryCountsByType[CombatLogEventType.Movement]);
         Assert.Equal(2, summary.LogEntryCountsByType[CombatLogEventType.MeleeAttack]);
     }
+
+    [Fact]
+    public async Task GetSummary_IncludesVictoryPointsPerParticipant()
+    {
+        var faction = await CreateFactionAsync("Cygnar-Summary-Score");
+        var army = await CreateArmyAsync(faction.Id, "Scoring Army");
+        var map = await CreateMapAsync("Summary Score Board");
+        var session = await CreateSessionAsync(map.Id);
+
+        var participantResponse = await _client.PostAsJsonAsync($"/api/sessions/{session.Id}/participants", new GameParticipant { ArmyId = army.Id, TurnOrder = 1 }, TestJson.Options);
+        var participant = await participantResponse.Content.ReadFromJsonAsync<GameParticipant>(TestJson.Options);
+
+        await _client.PostAsJsonAsync($"/api/participants/{participant!.Id}/score", new ScoreUpdate { Points = 2 }, TestJson.Options);
+        await _client.PostAsJsonAsync($"/api/participants/{participant.Id}/score", new ScoreUpdate { Points = 1 }, TestJson.Options);
+
+        var response = await _client.GetAsync($"/api/sessions/{session.Id}/summary");
+        var summary = await response.Content.ReadFromJsonAsync<GameSessionSummary>(TestJson.Options);
+
+        var summaryForArmy = summary!.Participants.Single(p => p.ArmyId == army.Id);
+        Assert.Equal(3, summaryForArmy.VictoryPoints);
+    }
 }

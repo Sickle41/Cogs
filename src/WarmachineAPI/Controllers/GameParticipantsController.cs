@@ -4,6 +4,11 @@ using WarmachineAPI.Services;
 
 namespace WarmachineAPI.Controllers;
 
+public class ScoreUpdate
+{
+    public int Points { get; set; }
+}
+
 [ApiController]
 public class GameParticipantsController : ControllerBase
 {
@@ -61,5 +66,19 @@ public class GameParticipantsController : ControllerBase
     public IActionResult Delete(Guid id)
     {
         return _participants.Delete(id) ? NoContent() : NotFound();
+    }
+
+    [HttpPost("api/participants/{id:guid}/score")]
+    public IActionResult AddScore(Guid id, ScoreUpdate update)
+    {
+        var participant = _participants.GetById(id);
+        if (participant is null)
+        {
+            return NotFound();
+        }
+
+        participant.VictoryPoints += update.Points;
+        _participants.Update(id, participant);
+        return NoContent();
     }
 }
