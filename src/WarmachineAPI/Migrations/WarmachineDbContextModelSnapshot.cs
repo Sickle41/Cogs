@@ -234,6 +234,28 @@ namespace WarmachineAPI.Migrations
                     b.ToTable("Factions");
                 });
 
+            modelBuilder.Entity("WarmachineAPI.Models.Feat", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UnitDefinitionId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Feats");
+                });
+
             modelBuilder.Entity("WarmachineAPI.Models.GameParticipant", b =>
                 {
                     b.Property<Guid>("Id")
@@ -334,6 +356,9 @@ namespace WarmachineAPI.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("HasActivated")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("HasUsedFeat")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsDestroyed")

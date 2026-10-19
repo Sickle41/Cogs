@@ -23,6 +23,11 @@ public class ActivationUpdate
     public bool HasActivated { get; set; }
 }
 
+public class FeatUpdate
+{
+    public bool HasUsedFeat { get; set; }
+}
+
 [ApiController]
 public class ModelInstancesController : ControllerBase
 {
@@ -132,6 +137,20 @@ public class ModelInstancesController : ControllerBase
         }
 
         model.HasActivated = update.HasActivated;
+        _models.Update(id, model);
+        return NoContent();
+    }
+
+    [HttpPatch("api/models/{id:guid}/feat")]
+    public IActionResult UpdateFeat(Guid id, FeatUpdate update)
+    {
+        var model = _models.GetById(id);
+        if (model is null)
+        {
+            return NotFound();
+        }
+
+        model.HasUsedFeat = update.HasUsedFeat;
         _models.Update(id, model);
         return NoContent();
     }

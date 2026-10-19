@@ -167,6 +167,25 @@ public class ModelInstancesControllerTests : IClassFixture<WarmachineApiFactory>
     }
 
     [Fact]
+    public async Task Create_ThenUpdateFeat_ReflectsHasUsedFeat()
+    {
+        var map = await CreateMapAsync("Model Feat Board");
+        var session = await CreateSessionAsync(map.Id);
+        var entry = await CreateFullChainArmyEntryAsync("Feat");
+
+        var createResponse = await _client.PostAsJsonAsync($"/api/sessions/{session.Id}/models", new ModelInstance { ArmyEntryId = entry.Id }, TestJson.Options);
+        var created = await createResponse.Content.ReadFromJsonAsync<ModelInstance>(TestJson.Options);
+        Assert.False(created!.HasUsedFeat);
+
+        var patchResponse = await _client.PatchAsJsonAsync($"/api/models/{created.Id}/feat", new FeatUpdate { HasUsedFeat = true }, TestJson.Options);
+        Assert.Equal(HttpStatusCode.NoContent, patchResponse.StatusCode);
+
+        var getResponse = await _client.GetAsync($"/api/models/{created.Id}");
+        var fetched = await getResponse.Content.ReadFromJsonAsync<ModelInstance>(TestJson.Options);
+        Assert.True(fetched!.HasUsedFeat);
+    }
+
+    [Fact]
     public async Task ResetActivations_SetsAllModelsInSessionToNotActivated()
     {
         var map = await CreateMapAsync("Model Reset Activation Board");
@@ -189,6 +208,27 @@ public class ModelInstancesControllerTests : IClassFixture<WarmachineApiFactory>
         var fetchedB = await (await _client.GetAsync($"/api/models/{createdB.Id}")).Content.ReadFromJsonAsync<ModelInstance>(TestJson.Options);
         Assert.False(fetchedA!.HasActivated);
         Assert.False(fetchedB!.HasActivated);
+    }
+
+    [Fact]
+    public async Task ResetActivations_DoesNotClearHasUsedFeat()
+    {
+        var map = await CreateMapAsync("Model Reset Feat Board");
+        var session = await CreateSessionAsync(map.Id);
+        var entry = await CreateFullChainArmyEntryAsync("ResetFeat");
+
+        var createResponse = await _client.PostAsJsonAsync($"/api/sessions/{session.Id}/models", new ModelInstance { ArmyEntryId = entry.Id }, TestJson.Options);
+        var created = await createResponse.Content.ReadFromJsonAsync<ModelInstance>(TestJson.Options);
+
+        await _client.PatchAsJsonAsync($"/api/models/{created!.Id}/feat", new FeatUpdate { HasUsedFeat = true }, TestJson.Options);
+        await _client.PatchAsJsonAsync($"/api/models/{created.Id}/activation", new ActivationUpdate { HasActivated = true }, TestJson.Options);
+
+        var resetResponse = await _client.PostAsync($"/api/sessions/{session.Id}/reset-activations", null);
+        Assert.Equal(HttpStatusCode.NoContent, resetResponse.StatusCode);
+
+        var fetched = await (await _client.GetAsync($"/api/models/{created.Id}")).Content.ReadFromJsonAsync<ModelInstance>(TestJson.Options);
+        Assert.False(fetched!.HasActivated);
+        Assert.True(fetched.HasUsedFeat);
     }
 
     [Fact]

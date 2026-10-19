@@ -34,6 +34,7 @@ builder.Services.AddScoped<IRepository<ControlZone>, EfRepository<ControlZone>>(
 builder.Services.AddScoped<IRepository<CombatLogEntry>, EfRepository<CombatLogEntry>>();
 builder.Services.AddScoped<IRepository<Account>, EfRepository<Account>>();
 builder.Services.AddScoped<IRepository<UnitAttachment>, EfRepository<UnitAttachment>>();
+builder.Services.AddScoped<IRepository<Feat>, EfRepository<Feat>>();
 
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<WarmachineDbContext>();

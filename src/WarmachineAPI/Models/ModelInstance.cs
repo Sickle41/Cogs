@@ -13,6 +13,7 @@ public class ModelInstance : IEntity, IAuditable
     public List<StatusEffect> StatusEffects { get; set; } = new();
     public List<DamageColumnState> DamageGrid { get; set; } = new();
     public bool HasActivated { get; set; }
+    public bool HasUsedFeat { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }
