@@ -1,6 +1,6 @@
 namespace WarmachineAPI.Models;
 
-public class GameSession : IEntity, IAuditable
+public class GameSession : IEntity, IAuditable, IConcurrent
 {
     public Guid Id { get; set; }
     public Guid MapId { get; set; }
@@ -10,4 +10,5 @@ public class GameSession : IEntity, IAuditable
     public Guid? ActiveParticipantId { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public Guid ConcurrencyToken { get; set; }
 }

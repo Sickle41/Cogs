@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace WarmachineAPI.Models;
 
-public class Army : IEntity, IAuditable
+public class Army : IEntity, IAuditable, IConcurrent
 {
     public Guid Id { get; set; }
 
@@ -18,4 +18,5 @@ public class Army : IEntity, IAuditable
 
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public Guid ConcurrencyToken { get; set; }
 }
