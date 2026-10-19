@@ -35,6 +35,7 @@ public class UnitDefinitionsController : ControllerBase
     }
 
     [HttpGet]
+    [ResponseCache(Duration = 30, VaryByQueryKeys = new[] { "factionId", "page", "pageSize", "search" })]
     public ActionResult<PagedResult<UnitDefinition>> GetAll(
         [FromQuery] Guid? factionId,
         [FromQuery] string? search,

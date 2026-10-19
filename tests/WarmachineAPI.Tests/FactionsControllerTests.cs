@@ -35,11 +35,15 @@ public class FactionsControllerTests : IClassFixture<WarmachineApiFactory>
     [Fact]
     public async Task GetAll_IncludesCreatedFaction()
     {
-        var faction = new Faction { Name = "Khador", Description = "Frozen empire." };
+        // Uses a uniquely-named faction + matching search filter so this test's GET hits a cache
+        // key no other test could have already populated (GetAll is response-cached for 30s,
+        // varying only by page/pageSize/search - a bare GET /api/factions is shared across tests).
+        var uniqueName = $"Khador-{Guid.NewGuid():N}";
+        var faction = new Faction { Name = uniqueName, Description = "Frozen empire." };
         var createResponse = await _client.PostAsJsonAsync("/api/factions", faction, TestJson.Options);
         var created = await createResponse.Content.ReadFromJsonAsync<Faction>(TestJson.Options);
 
-        var listResponse = await _client.GetAsync("/api/factions");
+        var listResponse = await _client.GetAsync($"/api/factions?search={uniqueName}");
         var page = await listResponse.Content.ReadFromJsonAsync<PagedResult<Faction>>(TestJson.Options);
 
         Assert.Contains(page!.Items, f => f.Id == created!.Id);
@@ -172,5 +176,29 @@ public class FactionsControllerTests : IClassFixture<WarmachineApiFactory>
 
         Assert.Contains(page!.Items, f => f.Name == matchName);
         Assert.DoesNotContain(page.Items, f => f.Name == otherName);
+    }
+
+    [Fact]
+    public async Task GetAll_RepeatedIdenticalQuery_ReturnsCachedResponseWithinWindow()
+    {
+        var uniqueSuffix = Guid.NewGuid().ToString("N")[..8];
+        var searchTerm = $"CacheProof-{uniqueSuffix}";
+
+        await _client.PostAsJsonAsync("/api/factions", new Faction { Name = $"{searchTerm}-First" }, TestJson.Options);
+
+        var firstResponse = await _client.GetAsync($"/api/factions?search={searchTerm}");
+        Assert.True(firstResponse.Headers.CacheControl?.Public);
+        var firstPage = await firstResponse.Content.ReadFromJsonAsync<PagedResult<Faction>>(TestJson.Options);
+        Assert.Single(firstPage!.Items);
+
+        // Create a second match for the exact same search term - a fresh (uncached) read would
+        // now see 2 items. Repeating the identical query should instead return the cached 1-item
+        // response from before this second faction existed, proving the cache is actually serving.
+        await _client.PostAsJsonAsync("/api/factions", new Faction { Name = $"{searchTerm}-Second" }, TestJson.Options);
+
+        var secondResponse = await _client.GetAsync($"/api/factions?search={searchTerm}");
+        var secondPage = await secondResponse.Content.ReadFromJsonAsync<PagedResult<Faction>>(TestJson.Options);
+
+        Assert.Single(secondPage!.Items);
     }
 }

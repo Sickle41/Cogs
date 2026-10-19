@@ -23,6 +23,7 @@ public class FactionsController : ControllerBase
     }
 
     [HttpGet]
+    [ResponseCache(Duration = 30, VaryByQueryKeys = new[] { "page", "pageSize", "search" })]
     public ActionResult<PagedResult<Faction>> GetAll(
         [FromQuery] string? search,
         [FromQuery] int? page,
