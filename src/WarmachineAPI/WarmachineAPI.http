@@ -291,6 +291,15 @@ Content-Type: application/json
 
 ###
 
+POST {{WarmachineAPI_HostAddress}}/api/participants/00000000-0000-0000-0000-000000000000/score
+Content-Type: application/json
+
+{
+  "points": 2
+}
+
+###
+
 POST {{WarmachineAPI_HostAddress}}/api/sessions/00000000-0000-0000-0000-000000000000/models
 Content-Type: application/json
 

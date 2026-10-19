@@ -274,6 +274,9 @@ namespace WarmachineAPI.Migrations
                     b.Property<int>("TurnOrder")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("VictoryPoints")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
                     b.ToTable("GameParticipants");
