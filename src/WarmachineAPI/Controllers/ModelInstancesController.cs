@@ -28,6 +28,11 @@ public class FeatUpdate
     public bool HasUsedFeat { get; set; }
 }
 
+/// <summary>
+/// A physical model on the board during a live <see cref="GameSession"/> - position, facing,
+/// damage, status effects, and once-per-round/once-per-game flags (activation, feat). This is
+/// live game state, distinct from the catalog data in <see cref="UnitDefinition"/>.
+/// </summary>
 [ApiController]
 public class ModelInstancesController : ControllerBase
 {
@@ -45,6 +50,7 @@ public class ModelInstancesController : ControllerBase
         _armyEntries = armyEntries;
     }
 
+    /// <summary>Lists all model instances currently on the board for a session.</summary>
     [HttpGet("api/sessions/{sessionId:guid}/models")]
     public ActionResult<IEnumerable<ModelInstance>> GetForSession(Guid sessionId)
     {
@@ -56,6 +62,7 @@ public class ModelInstancesController : ControllerBase
         return Ok(_models.GetAll().Where(m => m.GameSessionId == sessionId));
     }
 
+    /// <summary>Spawns a model instance on the board for a given session, from an army entry.</summary>
     [HttpPost("api/sessions/{sessionId:guid}/models")]
     public ActionResult<ModelInstance> Create(Guid sessionId, ModelInstance model)
     {
@@ -74,6 +81,7 @@ public class ModelInstancesController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
+    /// <summary>Gets a single model instance by id.</summary>
     [HttpGet("api/models/{id:guid}")]
     public ActionResult<ModelInstance> GetById(Guid id)
     {
@@ -81,6 +89,7 @@ public class ModelInstancesController : ControllerBase
         return model is null ? NotFound() : Ok(model);
     }
 
+    /// <summary>Updates a model's board position and facing. Does not validate movement legality.</summary>
     [HttpPatch("api/models/{id:guid}/position")]
     public IActionResult UpdatePosition(Guid id, PositionUpdate update)
     {
@@ -97,6 +106,7 @@ public class ModelInstancesController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Updates a model's flat damage total, destroyed flag, and status effects.</summary>
     [HttpPatch("api/models/{id:guid}/damage")]
     public IActionResult UpdateDamage(Guid id, DamageUpdate update)
     {
@@ -113,6 +123,10 @@ public class ModelInstancesController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Replaces a model's column-based damage grid (warjacks/warbeasts), e.g. arm/cortex boxes.
+    /// Not validated against the unit's damage column template.
+    /// </summary>
     [HttpPatch("api/models/{id:guid}/damage-grid")]
     public IActionResult UpdateDamageGrid(Guid id, List<DamageColumnState> update)
     {
@@ -127,6 +141,10 @@ public class ModelInstancesController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Marks whether a model has activated this round. Cleared for every model in a session by
+    /// <c>POST /api/sessions/{id}/reset-activations</c> when advancing to a new round.
+    /// </summary>
     [HttpPatch("api/models/{id:guid}/activation")]
     public IActionResult UpdateActivation(Guid id, ActivationUpdate update)
     {
@@ -141,6 +159,10 @@ public class ModelInstancesController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Marks whether a model (typically a warcaster/warlock) has used its once-per-game feat.
+    /// Unlike activation, this is never reset automatically - a feat is used once per game, not per round.
+    /// </summary>
     [HttpPatch("api/models/{id:guid}/feat")]
     public IActionResult UpdateFeat(Guid id, FeatUpdate update)
     {
@@ -155,6 +177,7 @@ public class ModelInstancesController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Removes a model instance from the board.</summary>
     [HttpDelete("api/models/{id:guid}")]
     public IActionResult Delete(Guid id)
     {
