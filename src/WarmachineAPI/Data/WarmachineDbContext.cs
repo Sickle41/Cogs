@@ -30,6 +30,7 @@ public class WarmachineDbContext : DbContext
     public DbSet<CombatLogEntry> CombatLogEntries => Set<CombatLogEntry>();
     public DbSet<Account> Accounts => Set<Account>();
     public DbSet<UnitAttachment> UnitAttachments => Set<UnitAttachment>();
+    public DbSet<Feat> Feats => Set<Feat>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

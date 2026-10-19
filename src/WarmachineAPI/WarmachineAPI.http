@@ -71,6 +71,16 @@ Content-Type: application/json
 
 ###
 
+POST {{WarmachineAPI_HostAddress}}/api/units/00000000-0000-0000-0000-000000000000/feats
+Content-Type: application/json
+
+{
+  "name": "Last Stand",
+  "description": "Transfer damage away from the caster."
+}
+
+###
+
 POST {{WarmachineAPI_HostAddress}}/api/units/00000000-0000-0000-0000-000000000000/attachments
 Content-Type: application/json
 
@@ -321,6 +331,15 @@ Content-Type: application/json
 ###
 
 POST {{WarmachineAPI_HostAddress}}/api/sessions/00000000-0000-0000-0000-000000000000/reset-activations
+
+###
+
+PATCH {{WarmachineAPI_HostAddress}}/api/models/00000000-0000-0000-0000-000000000000/feat
+Content-Type: application/json
+
+{
+  "hasUsedFeat": true
+}
 
 ###
 
