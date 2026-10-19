@@ -4,12 +4,19 @@ using WarmachineAPI.Services;
 
 namespace WarmachineAPI.Controllers;
 
+/// <summary>A caster's battlegroup: the caster entry and the jack/beast entries assigned to it.</summary>
 public class Battlegroup
 {
     public ArmyEntry? Caster { get; set; }
     public List<ArmyEntry> Members { get; set; } = new();
 }
 
+/// <summary>
+/// Line items within an <see cref="Army"/> list - which units, how many, and their optional
+/// attachment/battlegroup assignment. Routed under both <c>/api/armies/{armyId}/entries</c>
+/// (nested, for creating/listing within an army) and <c>/api/army-entries/{id}</c> (flat, for
+/// direct access to a single entry).
+/// </summary>
 [ApiController]
 public class ArmyEntriesController : ControllerBase
 {
@@ -86,6 +93,7 @@ public class ArmyEntriesController : ControllerBase
         return null;
     }
 
+    /// <summary>Lists all entries in an army's list.</summary>
     [HttpGet("api/armies/{armyId:guid}/entries")]
     public ActionResult<IEnumerable<ArmyEntry>> GetForArmy(Guid armyId)
     {
@@ -97,6 +105,11 @@ public class ArmyEntriesController : ControllerBase
         return Ok(_entries.GetAll().Where(e => e.ArmyId == armyId));
     }
 
+    /// <summary>
+    /// Groups an army's entries by battlegroup caster - a convenience read-model. Entries with no
+    /// caster assigned (standalone casters, infantry, solos) are grouped under <c>Caster: null</c>.
+    /// Does not compute control points or any other rules-level math.
+    /// </summary>
     [HttpGet("api/armies/{armyId:guid}/battlegroups")]
     public ActionResult<IEnumerable<Battlegroup>> GetBattlegroups(Guid armyId)
     {
@@ -118,6 +131,10 @@ public class ArmyEntriesController : ControllerBase
         return Ok(battlegroups);
     }
 
+    /// <summary>
+    /// Adds an entry to an army's list. Validates that the unit exists and belongs to the army's
+    /// faction, and (if provided) that the attachment and battlegroup caster are valid.
+    /// </summary>
     [HttpPost("api/armies/{armyId:guid}/entries")]
     public ActionResult<ArmyEntry> Create(Guid armyId, ArmyEntry entry)
     {
@@ -153,6 +170,7 @@ public class ArmyEntriesController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
+    /// <summary>Gets a single army entry by id.</summary>
     [HttpGet("api/army-entries/{id:guid}")]
     public ActionResult<ArmyEntry> GetById(Guid id)
     {
@@ -160,6 +178,7 @@ public class ArmyEntriesController : ControllerBase
         return entry is null ? NotFound() : Ok(entry);
     }
 
+    /// <summary>Replaces an army entry's details (quantity, attachment, battlegroup assignment).</summary>
     [HttpPut("api/army-entries/{id:guid}")]
     public IActionResult Update(Guid id, ArmyEntry entry)
     {
@@ -193,6 +212,7 @@ public class ArmyEntriesController : ControllerBase
         return _entries.Update(id, entry) ? NoContent() : NotFound();
     }
 
+    /// <summary>Removes an entry from an army's list.</summary>
     [HttpDelete("api/army-entries/{id:guid}")]
     public IActionResult Delete(Guid id)
     {

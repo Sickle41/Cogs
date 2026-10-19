@@ -3,6 +3,7 @@ using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using WarmachineAPI.Data;
 using WarmachineAPI.Models;
 using WarmachineAPI.Services;
@@ -73,7 +74,23 @@ builder.Services.AddResponseCaching();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Warmachine API",
+        Version = "v1",
+        Description = "A data-store API for running Warmachine-style tabletop games: factions, " +
+            "unit catalogs, armies, boards, and live game/session state."
+    });
+
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        options.IncludeXmlComments(xmlPath);
+    }
+});
 
 var app = builder.Build();
 
