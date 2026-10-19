@@ -139,4 +139,22 @@ public class UnitDefinitionsControllerTests : IClassFixture<WarmachineApiFactory
         var deleteResponse = await _client.DeleteAsync($"/api/units/{unit.Id}");
         Assert.Equal(HttpStatusCode.Conflict, deleteResponse.StatusCode);
     }
+
+    [Fact]
+    public async Task GetAll_WithSearch_FiltersByNameSubstringCaseInsensitively()
+    {
+        var faction = await CreateFactionAsync("Cygnar-Unit-Search");
+        var uniqueSuffix = Guid.NewGuid().ToString("N")[..8];
+        var matchName = $"Stormblade-{uniqueSuffix}";
+        var otherName = $"LongGunner-{uniqueSuffix}";
+
+        await _client.PostAsJsonAsync("/api/units", BuildUnit(faction.Id, matchName), TestJson.Options);
+        await _client.PostAsJsonAsync("/api/units", BuildUnit(faction.Id, otherName), TestJson.Options);
+
+        var response = await _client.GetAsync($"/api/units?search=stormblade-{uniqueSuffix}");
+        var page = await response.Content.ReadFromJsonAsync<PagedResult<UnitDefinition>>(TestJson.Options);
+
+        Assert.Contains(page!.Items, u => u.Name == matchName);
+        Assert.DoesNotContain(page.Items, u => u.Name == otherName);
+    }
 }

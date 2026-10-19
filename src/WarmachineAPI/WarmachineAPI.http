@@ -10,6 +10,11 @@ Accept: application/json
 
 ###
 
+GET {{WarmachineAPI_HostAddress}}/api/factions?search=cygnar
+Accept: application/json
+
+###
+
 POST {{WarmachineAPI_HostAddress}}/api/factions
 Content-Type: application/json
 
@@ -21,6 +26,11 @@ Content-Type: application/json
 ###
 
 GET {{WarmachineAPI_HostAddress}}/api/units
+Accept: application/json
+
+###
+
+GET {{WarmachineAPI_HostAddress}}/api/units?search=storm
 Accept: application/json
 
 ###
@@ -222,6 +232,11 @@ Accept: application/json
 ###
 
 GET {{WarmachineAPI_HostAddress}}/api/scenarios
+Accept: application/json
+
+###
+
+GET {{WarmachineAPI_HostAddress}}/api/scenarios?search=incursion
 Accept: application/json
 
 ###

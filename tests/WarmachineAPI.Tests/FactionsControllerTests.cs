@@ -156,4 +156,21 @@ public class FactionsControllerTests : IClassFixture<WarmachineApiFactory>
         var deleteResponse = await _client.DeleteAsync($"/api/factions/{faction.Id}");
         Assert.Equal(HttpStatusCode.Conflict, deleteResponse.StatusCode);
     }
+
+    [Fact]
+    public async Task GetAll_WithSearch_FiltersByNameSubstringCaseInsensitively()
+    {
+        var uniqueSuffix = Guid.NewGuid().ToString("N")[..8];
+        var matchName = $"Cygnar-Search-{uniqueSuffix}";
+        var otherName = $"Khador-Search-{uniqueSuffix}";
+
+        await _client.PostAsJsonAsync("/api/factions", new Faction { Name = matchName }, TestJson.Options);
+        await _client.PostAsJsonAsync("/api/factions", new Faction { Name = otherName }, TestJson.Options);
+
+        var response = await _client.GetAsync($"/api/factions?search=cygnar-search-{uniqueSuffix}");
+        var page = await response.Content.ReadFromJsonAsync<PagedResult<Faction>>(TestJson.Options);
+
+        Assert.Contains(page!.Items, f => f.Name == matchName);
+        Assert.DoesNotContain(page.Items, f => f.Name == otherName);
+    }
 }

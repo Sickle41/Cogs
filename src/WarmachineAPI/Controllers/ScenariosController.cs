@@ -23,9 +23,15 @@ public class ScenariosController : ControllerBase
     }
 
     [HttpGet]
-    public ActionResult<IEnumerable<Scenario>> GetAll()
+    public ActionResult<IEnumerable<Scenario>> GetAll([FromQuery] string? search)
     {
-        return Ok(_scenarios.GetAll());
+        var scenarios = _scenarios.GetAll();
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            scenarios = scenarios.Where(s => s.Name.Contains(search, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return Ok(scenarios);
     }
 
     [HttpGet("{id:guid}")]

@@ -59,4 +59,21 @@ public class ScenariosControllerTests : IClassFixture<WarmachineApiFactory>
         var deleteResponse = await _client.DeleteAsync($"/api/scenarios/{scenario.Id}");
         Assert.Equal(HttpStatusCode.Conflict, deleteResponse.StatusCode);
     }
+
+    [Fact]
+    public async Task GetAll_WithSearch_FiltersByNameSubstringCaseInsensitively()
+    {
+        var uniqueSuffix = Guid.NewGuid().ToString("N")[..8];
+        var matchName = $"Incursion-Search-{uniqueSuffix}";
+        var otherName = $"Recon-Search-{uniqueSuffix}";
+
+        await _client.PostAsJsonAsync("/api/scenarios", new Scenario { Name = matchName }, TestJson.Options);
+        await _client.PostAsJsonAsync("/api/scenarios", new Scenario { Name = otherName }, TestJson.Options);
+
+        var response = await _client.GetAsync($"/api/scenarios?search=incursion-search-{uniqueSuffix}");
+        var list = await response.Content.ReadFromJsonAsync<List<Scenario>>(TestJson.Options);
+
+        Assert.Contains(list!, s => s.Name == matchName);
+        Assert.DoesNotContain(list!, s => s.Name == otherName);
+    }
 }
