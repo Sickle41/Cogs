@@ -568,6 +568,12 @@ namespace WarmachineAPI.Migrations
                     b.Property<int>("MeleeAttack")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("MeleeWeaponPow")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MeleeWeaponRange")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -577,6 +583,24 @@ namespace WarmachineAPI.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("RangedAttack")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("RangedWeaponAoe")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("RangedWeaponBlastPow")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("RangedWeaponIsSpray")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("RangedWeaponPow")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("RangedWeaponRange")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("RangedWeaponRof")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("Speed")
